@@ -24,7 +24,9 @@ fun SetupNavigation(navController: NavHostController, homeViewModel: HomeViewMod
             })
         }
         composable("health") {
-            HealthScreen(navController = navController)
+            HealthScreen(navController = navController, onNavigate = { route ->
+                navController.navigate(route)
+            })
         }
         composable("profile") {
             ProfileScreen(navController = navController)

@@ -23,11 +23,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -49,13 +46,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
@@ -66,7 +61,7 @@ import com.example.bakis.viewmodel.HomeViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.roundToInt
+import kotlin.math.round
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -716,16 +711,17 @@ fun EditDialogWeight(title: String, weightValue: Double, userId: Int, onConfirm:
                     Slider(
                         value = weight.toFloat(),
                         onValueChange = { newValue ->
-                            // Convert back to Double and allow decimal places
-                            weight = (newValue.toDouble() * 10).roundToInt() / 10.0
+                            // More refined adjustment for .0 and .5 increments
+                            weight = (round(newValue * 2) / 2.0).toDouble()
                         },
-                        valueRange = 30f..200f, // Weight range
+                        valueRange = 30f..200f,
                         modifier = Modifier.fillMaxWidth(),
                         colors = SliderDefaults.colors(
-                            thumbColor = Color(0xFFd3d3d3),
-                            activeTrackColor = Color(0xFFd3d3d3),
-                            inactiveTrackColor = Color(0xFFd3d3d3).copy(alpha = 0.24f)
+                            thumbColor = Color(0xFFD3D3D3),
+                            activeTrackColor = Color(0xFFD3D3D3),
+                            inactiveTrackColor = Color(0xFFD3D3D3).copy(alpha = 0.24f)
                         )
+                        // Steps parameter is removed since we are manually adjusting the value to conform to .5 steps.
                     )
                 }
                 Spacer(modifier = Modifier.padding(8.dp))

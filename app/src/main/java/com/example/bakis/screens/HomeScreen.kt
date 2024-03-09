@@ -27,6 +27,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,17 +36,20 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.bakis.R
 import com.example.bakis.consumables.CustomBottomNavigationBar
 import com.example.bakis.consumables.CustomTopAppBar
+import com.example.bakis.viewmodel.HomeViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavHostController, onNavigate: (String) -> Unit) {
+fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel(), navController: NavHostController, onNavigate: (String) -> Unit) {
     val items = listOf("Dashboard", "Health", "Me")
     val icons = listOf(Icons.Default.Build, Icons.Default.Favorite, Icons.Default.Person)
+    val userName by homeViewModel.userName.collectAsState()
 
     Scaffold(
         topBar = {
@@ -64,12 +69,14 @@ fun HomeScreen(navController: NavHostController, onNavigate: (String) -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
-                .padding(paddingValues) // Apply the padding here
+                .padding(paddingValues)
                 .background(Color(0xFF262626)), // Set the background color here
 
         horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
+                val displayName = if (userName.isEmpty()) "User" else userName
+                Text(text = "Welcome, $displayName", color = Color.White)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth() // Fill the parent's width
@@ -383,38 +390,6 @@ fun HomeScreen(navController: NavHostController, onNavigate: (String) -> Unit) {
             }
             item {
                 Spacer(modifier = Modifier.height(30.dp)) // Gap between the squares
-            }
-            // Replace these colors with your theme colors
-            val colors = listOf(Color.Green, Color.Blue, Color.Magenta, Color.Cyan)
-            val texts = listOf("HEALTH RISK CHECK", "SPORTS EVALUATION", "EXERCISE TRAINING", "DNA TESTING")
-            val routes = listOf("screen1", "screen2", "screen3", "dnaTesting")
-
-            for (i in texts.indices) {
-                item {
-                    Card(
-                        modifier = Modifier
-                            .padding(10.dp)
-                            .width(300.dp)
-                            .height(100.dp)
-                            .clickable { onNavigate(routes[i]) },
-                        shape = RoundedCornerShape(40.dp),
-                        colors = CardDefaults.cardColors(containerColor = colors[i])
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(100.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = texts[i],
-                                style = MaterialTheme.typography.headlineMedium,
-                                color = Color.White,
-                                modifier = Modifier.align(Alignment.Center) // Explicitly align text to center
-                            )
-                        }
-                    }
-                }
             }
         }
     }

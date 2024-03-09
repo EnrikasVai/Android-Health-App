@@ -27,23 +27,6 @@ class HomeViewModel @Inject constructor(
         // Call getUserDetails upon initialization to fetch user details from the database
         getUserDetails()
     }
-
-    private fun getUserDetails() {
-        viewModelScope.launch(IO) {
-            repository.getAllUsers().collectLatest { users ->
-                // Assuming you're fetching a single user here
-                if (users.isNotEmpty()) {
-                    val user = users.first() // Assuming you're fetching the first user
-                    _userName.emit(user.name)
-                    _userAge.emit(user.age)
-                    _userWeight.emit(user.weight)
-                    _userHeight.emit(user.height)
-                    _userSex.emit(user.sex)
-                    _userId.emit(user.id)
-                }
-            }
-        }
-    }
     //Check if database has users for navigation
     private val _hasUsers = MutableStateFlow<Boolean?>(null) // Initially null to indicate not checked yet
     val hasUsers: StateFlow<Boolean?> = _hasUsers.asStateFlow()
@@ -139,6 +122,22 @@ class HomeViewModel @Inject constructor(
     fun updateUserSex(userId: Int, newSex: Boolean) {
         viewModelScope.launch(IO) {
             repository.updateUserSex(userId, newSex)
+        }
+    }
+    private fun getUserDetails() {
+        viewModelScope.launch(IO) {
+            repository.getAllUsers().collectLatest { users ->
+                // Assuming you're fetching a single user here
+                if (users.isNotEmpty()) {
+                    val user = users.first() // Assuming you're fetching the first user
+                    _userName.emit(user.name)
+                    _userAge.emit(user.age)
+                    _userWeight.emit(user.weight)
+                    _userHeight.emit(user.height)
+                    _userSex.emit(user.sex)
+                    _userId.emit(user.id)
+                }
+            }
         }
     }
 
