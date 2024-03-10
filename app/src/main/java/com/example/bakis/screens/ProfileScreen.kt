@@ -55,8 +55,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.example.bakis.R
-import com.example.bakis.consumables.CustomBottomNavigationBar
-import com.example.bakis.consumables.CustomTopAppBar
+import com.example.bakis.composables.CustomBottomNavigationBar
+import com.example.bakis.composables.CustomTopAppBar
 import com.example.bakis.viewmodel.HomeViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -276,9 +276,9 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
             textValue = tempUserName,
             userId = userId,
             onConfirm ={ newName ->
-            viewModel.updateUserName(userId, newName)
-            tempUserName = newName // Update the temporary holder with the new value
-            showNameEditDialog = false },
+                viewModel.updateUserName(userId, newName)
+                tempUserName = newName // Update the temporary holder with the new value
+                showNameEditDialog = false },
             onDismiss = { showNameEditDialog = false }
         )
     }
@@ -289,9 +289,9 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
             initialSex = initialSex,
             userId = userId,
             onConfirm = { newSex ->
-            viewModel.updateUserSex(userId, newSex.toBoolean()) // Make sure this method exists and is correctly implemented
-            // Update the UI or state as needed after the sex is updated
-            showSexEditDialog = false},
+                viewModel.updateUserSex(userId, newSex.toBoolean()) // Make sure this method exists and is correctly implemented
+                // Update the UI or state as needed after the sex is updated
+                showSexEditDialog = false},
             onDismiss = {showSexEditDialog = false}
         )
     }
@@ -305,12 +305,12 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
             ageValue = currentAge,
             userId = userId,
             onConfirm = { newAge ->
-            viewModel.viewModelScope.launch {
-                // Update the age in your ViewModel here
-                viewModel.updateUserAge(userId, newAge) // Assuming updateUserAge exists
-            }
-            // After updating, you may want to also update userAge in your ViewModel to reflect the change immediately
-            showAgeEditDialog = false },
+                viewModel.viewModelScope.launch {
+                    // Update the age in your ViewModel here
+                    viewModel.updateUserAge(userId, newAge) // Assuming updateUserAge exists
+                }
+                // After updating, you may want to also update userAge in your ViewModel to reflect the change immediately
+                showAgeEditDialog = false },
             onDismiss = {showAgeEditDialog = false}
         )
     }
@@ -324,12 +324,12 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
             heightValue = currentHeight,
             userId = userId,
             onConfirm = { newHeight ->
-            viewModel.viewModelScope.launch {
-                // Update the age in your ViewModel here
-                viewModel.updateUserHeight(userId, newHeight) // Assuming updateUserAge exists
-            }
-            // After updating, you may want to also update userAge in your ViewModel to reflect the change immediately
-            showHeightEditDialog = false},
+                viewModel.viewModelScope.launch {
+                    // Update the age in your ViewModel here
+                    viewModel.updateUserHeight(userId, newHeight) // Assuming updateUserAge exists
+                }
+                // After updating, you may want to also update userAge in your ViewModel to reflect the change immediately
+                showHeightEditDialog = false},
             onDismiss = {showHeightEditDialog = false}
         )
     }
@@ -343,12 +343,12 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
             weightValue = currentWeight,
             userId = userId,
             onConfirm = { newWeight ->
-            viewModel.viewModelScope.launch {
-                // Make sure updateUserWeight method accepts Double
-                viewModel.updateUserWeight(userId, newWeight)
-            }
-            // Close the dialog and possibly refresh userWeight in your ViewModel to reflect the update
-            showWeightEditDialog = false},
+                viewModel.viewModelScope.launch {
+                    // Make sure updateUserWeight method accepts Double
+                    viewModel.updateUserWeight(userId, newWeight)
+                }
+                // Close the dialog and possibly refresh userWeight in your ViewModel to reflect the update
+                showWeightEditDialog = false},
             onDismiss = {showWeightEditDialog = false}
         )
     }
@@ -508,7 +508,7 @@ fun EditDialogSex(title: String, initialSex: String, userId: Int, onConfirm: (St
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.padding(end = 8.dp) // Adds spacing between the buttons
-                        ) {
+                    ) {
                         Text("Cancel")
                     }
                     Spacer(Modifier.width(8.dp)) // Space between buttons
@@ -755,6 +755,4 @@ fun EditDialogWeight(title: String, weightValue: Double, userId: Int, onConfirm:
             }
         }
     }
-
 }
-

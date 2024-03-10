@@ -19,9 +19,7 @@ fun SetupNavigation(navController: NavHostController, homeViewModel: HomeViewMod
     NavHost(navController = navController, startDestination = "welcome") {
         composable("home") {
             // Pass `navController` to `HomeScreen` here
-            HomeScreen(navController = navController, onNavigate = { route ->
-                navController.navigate(route)
-            })
+            HomeScreen(navController = navController)
         }
         composable("health") {
             HealthScreen(navController = navController, onNavigate = { route ->

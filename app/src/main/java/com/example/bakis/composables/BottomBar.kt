@@ -1,7 +1,5 @@
-package com.example.bakis.consumables
+package com.example.bakis.composables
 
-import android.text.style.BackgroundColorSpan
-import androidx.compose.material3.AlertDialogDefaults.containerColor
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar

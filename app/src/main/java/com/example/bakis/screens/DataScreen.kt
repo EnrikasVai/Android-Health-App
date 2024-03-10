@@ -23,8 +23,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.example.bakis.consumables.CustomBottomNavigationBar
-import com.example.bakis.consumables.CustomTopAppBar
+import com.example.bakis.composables.CustomBottomNavigationBar
+import com.example.bakis.composables.CustomTopAppBar
 import com.example.bakis.viewmodel.HomeViewModel
 
 

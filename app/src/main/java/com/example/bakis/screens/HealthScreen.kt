@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -15,8 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -25,19 +22,34 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.example.bakis.consumables.CustomBottomNavigationBar
-import com.example.bakis.consumables.CustomTopAppBar
+import com.example.bakis.R
+import com.example.bakis.composables.CustomBottomNavigationBar
+import com.example.bakis.composables.CustomTopAppBar
+
+data class HealthScreenData(
+    val iconId: Int,
+    val text: String,
+    val color1: Long,
+    val color2: Long,
+    val rout: String
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HealthScreen(navController: NavHostController, onNavigate: (String) -> Unit) {
     val items = listOf("Dashboard", "Health", "Me")
     val icons = listOf(Icons.Default.Build, Icons.Default.Favorite, Icons.Default.Person)
-
-    Scaffold(
+    val data = listOf(
+        HealthScreenData(R.drawable.footsteps,"HEALTH RISK CHECK", 0xFFFF7518, 0xFFFF3131, "screen1"),
+        HealthScreenData(R.drawable.footsteps,"HEALTH RISK CHECK", 0xFFFF7518, 0xFFFF3131, "screen1"),
+        HealthScreenData(R.drawable.footsteps,"HEALTH RISK CHECK", 0xFFFF7518, 0xFFFF3131, "screen1"),
+        HealthScreenData(R.drawable.footsteps,"HEALTH RISK CHECK", 0xFFFF7518, 0xFFFF3131, "screen1")
+    )
+        Scaffold(
         topBar = {
             CustomTopAppBar(
                 title = "Health Screen"
@@ -59,39 +71,40 @@ fun HealthScreen(navController: NavHostController, onNavigate: (String) -> Unit)
             ,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-                // Replace these colors with your theme colors
-                val colors = listOf(Color.Green, Color.Blue, Color.Magenta, Color.Cyan)
-                val texts = listOf("HEALTH RISK CHECK", "SPORTS EVALUATION", "EXERCISE TRAINING", "DNA TESTING")
-                val routes = listOf("screen1", "screen2", "screen3", "dnaTesting")
-
-                for (i in texts.indices) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .padding(10.dp)
-                                .width(300.dp)
-                                .height(100.dp)
-                                .clickable { onNavigate(routes[i]) }
-                                .background(colors[i])
-                                .clip(RoundedCornerShape(12.dp)),
-                            ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(100.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = texts[i],
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    color = Color.White,
-                                    modifier = Modifier.align(Alignment.Center) // Explicitly align text to center
-                                )
-                            }
-                        }
-                    }
-                }
-
+            //val colors = listOf(Color.Green, Color.Blue, Color.Magenta, Color.Cyan, Color.Gray)
+            items(data.size) { index ->
+                NavButton(data = data[index], onNavigate = onNavigate)
+            }
+        }
+    }
+}
+@Composable
+fun NavButton(
+    data: HealthScreenData,
+    onNavigate: (String) -> Unit
+){
+    val color1 = Color(data.color1)
+    val color2 = Color(data.color2)
+    Box(
+        modifier = Modifier
+            .padding(10.dp)
+            .width(300.dp)
+            .height(100.dp)
+            .clip(RoundedCornerShape(12.dp)) // Clip applies to this outer Box
+            .background(Brush.horizontalGradient(colors = listOf(color1, color2)))
+            .clickable { onNavigate(data.rout) },
+    ) {
+        Box(
+            modifier = Modifier
+                .matchParentSize() // Ensures this Box fills the clipped parent
+                .padding(10.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = data.text,
+                style = MaterialTheme.typography.headlineMedium,
+                color = Color.White
+            )
         }
     }
 }
