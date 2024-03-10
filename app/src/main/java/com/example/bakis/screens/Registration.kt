@@ -1,5 +1,7 @@
 package com.example.bakis.screens
 
+import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -31,6 +34,13 @@ fun FirstTimeScreen(homeViewModel: HomeViewModel = hiltViewModel(), navControlle
     val genderOptions = listOf("Female", "Male")
     var selectedOption by remember { mutableStateOf(if (sex) "Male" else "Female") }
 
+    val activity = LocalContext.current as Activity
+
+    // Handle the back button press
+    BackHandler(enabled = true) {
+        // This block will be empty to intercept the back press without any action
+    }
+
     Scaffold { paddingValues ->
         Column(
             modifier = Modifier
@@ -52,12 +62,12 @@ fun FirstTimeScreen(homeViewModel: HomeViewModel = hiltViewModel(), navControlle
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Name", color = Color(0xFFd3d3d3)) },
+                label = { Text("Name (optional)", color = Color(0xFFd3d3d3)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    textColor = Color(0xFFd3d3d3), // Set text color to black
-                    focusedBorderColor = Color(0xFFd3d3d3), // Optional: Set border color when focused
+                    textColor = Color(0xFFd3d3d3),
+                    focusedBorderColor = Color(0xFFd3d3d3),
                 )
 
             )
@@ -141,7 +151,12 @@ fun FirstTimeScreen(homeViewModel: HomeViewModel = hiltViewModel(), navControlle
                     val userEntity = UserEntity(name = name, age = age, height = height, weight = weight, sex = sex)
                     homeViewModel.insertUser(userEntity)
                     // Navigate to the home screen
-                    navController.navigate("home")
+                    navController.navigate("home") {
+                        // Remove all entries from the back stack
+                        popUpTo(0) {
+                            inclusive = true
+                        }
+                    }
                 },
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier

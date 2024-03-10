@@ -1,5 +1,7 @@
 package com.example.bakis.screens
 
+import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +27,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -36,9 +40,8 @@ import kotlinx.coroutines.launch
 fun WelcomeScreen(homeViewModel: HomeViewModel, navController: NavHostController) {
     val coroutineScope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(true) } // Initially, set loading to true
-
-    // Observe hasUsers state
     val hasUsers by homeViewModel.hasUsers.collectAsState()
+    val activity = LocalContext.current as Activity
 
     SideEffect {
         coroutineScope.launch {
@@ -51,51 +54,53 @@ fun WelcomeScreen(homeViewModel: HomeViewModel, navController: NavHostController
                 delay(minLoadingTime - checkDuration)
             }
             isLoading = false
+
+            // Automatic navigation after loading is complete
+            if (hasUsers == true) {
+                navController.navigate("home") {
+                    popUpTo("welcome") { inclusive = true }
+                }
+            } else {
+                navController.navigate("registration") {
+                    popUpTo("welcome") { inclusive = true }
+                }
+            }
         }
     }
+    // Handle the back button press
+    BackHandler(enabled = true) {
+        activity.finish() // This will close the application
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF333333)),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "Welcome to Your Health App",
-                style = MaterialTheme.typography.headlineMedium,
-                color = Color.White
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            if (isLoading) {
-                CircularProgressIndicator(color = Color.White)
-            } else {
-                Button(
-                    onClick = {
-                        if (hasUsers == true) {
-                            navController.navigate("home") {
-                                // Clear the back stack
-                                popUpTo("welcome") { inclusive = true }
-                            }
-                        } else {
-                            navController.navigate("registration") {
-                                // Clear the back stack
-                                popUpTo("welcome") { inclusive = true }
-                            }
-                        }
-                    },
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFF333333)),
+                contentAlignment = Alignment.Center // This aligns the contents of the Box (including the Column) to the center
+            ) {
+                Column(
                     modifier = Modifier
-                        .padding(8.dp)
-                        .width(250.dp)
-                        .height(60.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFe8e209))
+                        .padding(50.dp), // Apply padding to the Column, not affecting its alignment
+                    horizontalAlignment = Alignment.CenterHorizontally // This will center the Column's children horizontally
                 ) {
                     Text(
-                        text = "Continue",
-                        fontSize = 20.sp
+                        text = "Welcome to Your Health App",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = Color.White,
+                        textAlign = TextAlign.Center
                     )
+                    Spacer(modifier = Modifier.height(30.dp)) // Adds space between the text and the progress indicator
+                    CircularProgressIndicator(color = Color.White)
                 }
             }
         }
     }
 }
+

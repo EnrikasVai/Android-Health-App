@@ -1,13 +1,16 @@
 package com.example.bakis.screens
 
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -38,6 +41,7 @@ data class HealthScreenData(
     val rout: String
 )
 
+@SuppressLint("SuspiciousIndentation")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HealthScreen(navController: NavHostController, onNavigate: (String) -> Unit) {
@@ -63,19 +67,24 @@ fun HealthScreen(navController: NavHostController, onNavigate: (String) -> Unit)
             )
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(Color(0xFF262626))
-            ,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            //val colors = listOf(Color.Green, Color.Blue, Color.Magenta, Color.Cyan, Color.Gray)
-            items(data.size) { index ->
-                NavButton(data = data[index], onNavigate = onNavigate)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(Color(0xFF262626)),
+                contentAlignment = Alignment.Center
+            ) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(), // Make LazyColumn wrap its content
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    items(data.size) { index ->
+                        NavButton(data = data[index], onNavigate = onNavigate)
+                    }
+                }
             }
-        }
     }
 }
 @Composable
