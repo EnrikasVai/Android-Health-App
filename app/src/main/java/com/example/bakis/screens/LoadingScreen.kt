@@ -2,6 +2,7 @@ package com.example.bakis.screens
 
 import android.app.Activity
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,10 +10,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -26,12 +25,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.bakis.R
 import com.example.bakis.viewmodel.HomeViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -90,6 +91,13 @@ fun WelcomeScreen(homeViewModel: HomeViewModel, navController: NavHostController
                         .padding(50.dp), // Apply padding to the Column, not affecting its alignment
                     horizontalAlignment = Alignment.CenterHorizontally // This will center the Column's children horizontally
                 ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.logo_app),
+                        contentDescription = "Your content description here",
+                        modifier = Modifier
+                            .size(100.dp) // Set the size of the image
+                            .clip(CircleShape) // Clip the image to a circle
+                    )
                     Text(
                         text = "Welcome to Your Health App",
                         style = MaterialTheme.typography.headlineMedium,

@@ -412,7 +412,7 @@ fun EditDialog(title: String, textValue: String, userId: Int, onConfirm: (String
                     modifier = Modifier.fillMaxWidth()
                         .background(Color.LightGray),
                     colors = TextFieldDefaults.textFieldColors(
-                        textColor = Color.Black, // Color of the text
+                        //textColor = Color.Black, // Color of the text
                         cursorColor = Color.Blue, // keep
                         focusedIndicatorColor = Color.Blue, // Keep
                         unfocusedIndicatorColor = Color.Black, // Color of the indicator (bottom line) when not focused

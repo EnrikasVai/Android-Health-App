@@ -66,7 +66,7 @@ fun FirstTimeScreen(homeViewModel: HomeViewModel = hiltViewModel(), navControlle
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                    textColor = Color(0xFFd3d3d3),
+                    //textColor = Color(0xFFd3d3d3),
                     focusedBorderColor = Color(0xFFd3d3d3),
                 )
 

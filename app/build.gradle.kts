@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.bakis"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -83,13 +83,25 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0-beta01")
 
     //LifeCycle SavedStates :
-
     val lifecycle_version = "2.6.2"
     implementation("androidx.lifecycle:lifecycle-runtime-compose:$lifecycle_version")
     implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycle_version")
-//    Serialization :
+    //Serialization :
     implementation(kotlin("stdlib"))
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
+
+    //graph YCHARTS gitHub
+    implementation ("co.yml:ycharts:2.1.0")
+
+    //graph VICO gitHub
+    // For Jetpack Compose.
+    implementation("com.patrykandpatrick.vico:compose:2.0.0-alpha.11")
+    // For `compose`. Creates a `ChartStyle` based on an M2 Material Theme.
+    implementation("com.patrykandpatrick.vico:compose-m2:2.0.0-alpha.11")
+    // For `compose`. Creates a `ChartStyle` based on an M3 Material Theme.
+    implementation("com.patrykandpatrick.vico:compose-m3:2.0.0-alpha.11")
+    // Houses the core logic for charts and other elements. Included in all other modules.
+    implementation("com.patrykandpatrick.vico:core:2.0.0-alpha.11")
 
 
 }
