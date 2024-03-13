@@ -18,7 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -44,21 +43,21 @@ data class InfoData(
     val iconId: Int,
     val text: String,
     val value: String,
-    val color: Long
+    val color: Long,
+    val nav: String
 )
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel(), navController: NavHostController) {
     val items = listOf("Dashboard", "Health", "Me")
     val icons = listOf(Icons.Default.Build, Icons.Default.Favorite, Icons.Default.Person)
     val userName by homeViewModel.userName.collectAsState()
     val data = listOf(
-        InfoData(R.drawable.footsteps, "Steps", "2000", 0xFFFF7518),
-        InfoData(R.drawable.bed, "Time In Bed", "8hr 35min",0xFF09bfe8),
-        InfoData(R.drawable.heart_beat, "Heart Rate", "67 bpm",0xFFFF3131),
-        InfoData(R.drawable.bed, "Time In Bed", "20hr 35min", 0xFF09bfe8) ,
-        InfoData(R.drawable.bed, "Time In Bed", "20hr 35min", 0xFF09bfe8),
-        InfoData(R.drawable.heart_beat, "Heart Rate", "67 bpm",0xFFFF3131),
+        InfoData(R.drawable.footsteps, "Steps", "2000", 0xFFFF7518, "stepData"),
+        InfoData(R.drawable.bed, "Time In Bed", "8hr 35min",0xFF09bfe8,"sleepData"),
+        InfoData(R.drawable.heart_beat, "Heart Rate", "67 bpm",0xFFFF3131,"bpmData"),
+        InfoData(R.drawable.bed, "Time In Bed", "20hr 35min", 0xFF09bfe8,"sleepData") ,
+        InfoData(R.drawable.bed, "Time In Bed", "20hr 35min", 0xFF09bfe8,"sleepData"),
+        InfoData(R.drawable.heart_beat, "Heart Rate", "67 bpm",0xFFFF3131,"bpmData"),
     )
     Scaffold(
         topBar = {
@@ -114,13 +113,14 @@ fun InfoBox(
 ) {
     val iconColor = Color(infoData.color)
     val textColor = Color(infoData.color)
+    val navTag = infoData.nav
     Box(
         modifier = Modifier
             .size(170.dp)
             .shadow(8.dp, RoundedCornerShape(10.dp))
             .clip(RoundedCornerShape(10.dp))
             .background(Color(0xFF333333))
-            .clickable { navController.navigate("data") },
+            .clickable { navController.navigate(navTag) },
         contentAlignment = Alignment.Center
     ) {
         Row(

@@ -1,4 +1,4 @@
-package com.example.bakis.screens
+package com.example.bakis.graphscreen
 
 import android.graphics.Typeface
 import androidx.compose.foundation.background
@@ -16,7 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -70,8 +69,7 @@ val averageStepsMonth = stepsPerMonth.average()
 var averageStepsCount = averageStepsMonth.toInt()
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
-fun DataScreen(navController: NavHostController, viewModel: HomeViewModel = hiltViewModel()) {
+fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hiltViewModel()) {
     Scaffold(
         topBar = {
             CustomTopAppBar(
@@ -187,7 +185,7 @@ private fun ComposeChart2(
                         thickness = 65.dp,
                         shape = Shapes.roundedCornerShape(allPercent = 40),
 
-                    ),
+                        ),
                 ),
             ),
 
@@ -322,9 +320,9 @@ private const val THRESHOLD_LINE_LABEL_MARGIN_DP = 4f
 
 //private val monthNames = DateFormatSymbols.getInstance(Locale.US).shortMonths
 //private val bottomAxisValueFormatter =
-    //AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->
-     //   "${monthNames[x.toInt() % 12]} ’${20 + x.toInt() / 12}"
-   // }
+//AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->
+//   "${monthNames[x.toInt() % 12]} ’${20 + x.toInt() / 12}"
+// }
 val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 private val bottomAxisValueFormatter =
     AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->
@@ -337,10 +335,214 @@ private val bottomAxisValueFormatterMonth =
         // Use daysOfWeek to get the label for each x value
         months[x.toInt() % months.size]
     }
+//************SLEEP DATA**************************
+//data example
+val sleepPerDayMin = listOf(300f, 800f, 900f, 500f, 550f, 700f, 400f)
+val sleepPerMonthMin = listOf(300f, 500f, 400f, 200f, 500f, 700f, 400f, 300f, 500f, 450f, 200f, 2000f)
+val averageSleepDay = sleepPerDayMin.average()
+val averageSleepMonth = sleepPerMonthMin.average()
+var averageSleepCount = averageSleepMonth.toInt()
+@Composable
+fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hiltViewModel()) {
+    Scaffold(
+        topBar = {
+            CustomTopAppBar(
+                title = "Sleep Data",
+                onEditClick = { /* ... */ },
+                showEditIcon = false // Only show the edit icon in the ProfileScreen
+            )
+        },
+        bottomBar = {
+            CustomBottomNavigationBar(
+                navController = navController,
+                items = listOf("Dashboard", "Health", "Me"),
+                icons = listOf(Icons.Default.Build, Icons.Default.Favorite, Icons.Default.Person)
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .fillMaxWidth()
+                .background(Color(0xFF262626)) // Set the background color here
+                .padding(top = 40.dp, start = 10.dp)
+                .padding(paddingValues) // Apply the padding here
+        ) {
+            item {
+                val labels = listOf("Week", "Month")
+                val selectedLabel = remember { mutableStateOf("Week") }
+                if(selectedLabel.value == "Week")
+                    averageSleepCount = averageSleepDay.toInt()
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 30.dp)
+                ) {
+                    Box(modifier = Modifier
+                        .clip(shape = RoundedCornerShape(30.dp))
+                        .padding(10.dp)
+                        .background(color = Color.DarkGray)
+                    ) {
+                        Text(
+                            text="Average Sleep: $averageSleepCount",
+                            color = Color.White,
+                            fontSize = 22.sp,
+                            modifier = Modifier.padding(10.dp)
+                        )
+                    }
+                    if(selectedLabel.value == "Week") {
+                        ChartSleep1(
+                            modifier = Modifier
+                                .padding(end = 10.dp)
+                                .height(350.dp)
+                        )
+                    }
+                    if(selectedLabel.value == "Month") {
+                        ChartSleep2(
+                            modifier = Modifier
+                                .padding(end = 10.dp)
+                                .height(350.dp)
+                        )
+                    }
+                    Row(modifier = Modifier
+                        .padding(top = 20.dp, end = 10.dp)
+                        .background(Color.LightGray, shape = RoundedCornerShape(8.dp))) {
+                        labels.forEachIndexed { index, label ->
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f) // Equal weight to distribute spaceDarkGray
+                                    .background(if (label == selectedLabel.value) Color.LightGray else Color.DarkGray)
+                                    .clickable { selectedLabel.value = label }
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = label, color = if (label == selectedLabel.value) Color.Black else Color.White)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+@Composable
+internal fun ChartSleep1(
+    modifier: Modifier,
+) {
+    val modelProducer = remember { CartesianChartModelProducer.build() }
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.Default) {
+            while (isActive) {
+                modelProducer.tryRunTransaction {
+                    columnSeries {
+                        series(sleepPerDayMin)
+                    }
+                }
+            }
+        }
+    }
+    ComposeChartSleep1(modelProducer, modifier)
+}
+@Composable
+private fun ComposeChartSleep1(
+    modelProducer: CartesianChartModelProducer,
+    modifier: Modifier,
+) {
+    CartesianChartHost(
+        scrollState =rememberVicoScrollState(scrollEnabled = false),
+        chart =
+        rememberCartesianChart(
+            rememberColumnCartesianLayer(
+                listOf(
+                    rememberLineComponent(
+                        color = Color(0xFF09bfe8),
+                        thickness = 65.dp,
+                        shape = Shapes.roundedCornerShape(allPercent = 40),
 
+                        ),
+                ),
+            ),
+            startAxis = rememberStartAxis(
+                label = rememberAxisLabelComponent(Color.White),
+                axis = rememberAxisLineComponent(Color.White),
+                guideline = rememberAxisGuidelineComponent(Color.White)
+            ),
+            bottomAxis =
+            rememberBottomAxis(
+                label = rememberAxisLabelComponent(Color.White),
+                axis = rememberAxisLineComponent(Color.White),
+                guideline = rememberAxisGuidelineComponent(Color.White),
+                valueFormatter = bottomAxisValueFormatter,
+                tick = rememberAxisTickComponent(),
+                itemPlacer =
+                remember { AxisItemPlacer.Horizontal.default(spacing = 1, addExtremeLabelPadding = true) },
+            ),
+            decorations = listOf(rememberComposeThresholdLine()),
+        ),
+        modelProducer = modelProducer,
+        modifier = modifier,
+        marker = rememberMarker(),
+        horizontalLayout = HorizontalLayout.fullWidth(),
+    )
+}
+@Composable
+internal fun ChartSleep2(
+    modifier: Modifier,
+) {
+    val modelProducer = remember { CartesianChartModelProducer.build() }
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.Default) {
+            while (isActive) {
+                modelProducer.tryRunTransaction {
+                    columnSeries {
+                        series(sleepPerMonthMin)
+                    }
+                }
+            }
+        }
+    }
+    ComposeChartSleep2(modelProducer, modifier)
+}
+@Composable
+private fun ComposeChartSleep2(
+    modelProducer: CartesianChartModelProducer,
+    modifier: Modifier,
+) {
+    CartesianChartHost(
+        chart =
+        rememberCartesianChart(
+            rememberColumnCartesianLayer(
+                listOf(
+                    rememberLineComponent(
+                        color = Color(0xFF09bfe8),
+                        thickness = 30.dp,
+                        shape = Shapes.roundedCornerShape(allPercent = 40),
 
-
-
+                        ),
+                ),
+            ),
+            startAxis = rememberStartAxis(
+                label = rememberAxisLabelComponent(Color.White),
+                axis = rememberAxisLineComponent(Color.White),
+                guideline = rememberAxisGuidelineComponent(Color.White)
+            ),
+            bottomAxis =
+            rememberBottomAxis(
+                label = rememberAxisLabelComponent(Color.White),
+                axis = rememberAxisLineComponent(Color.White),
+                guideline = rememberAxisGuidelineComponent(Color.White),
+                valueFormatter = bottomAxisValueFormatterMonth,
+                tick = rememberAxisTickComponent(),
+                itemPlacer =
+                remember { AxisItemPlacer.Horizontal.default(spacing = 1, addExtremeLabelPadding = true) },
+            ),
+            decorations = listOf(rememberComposeThresholdLine1()),
+        ),
+        modelProducer = modelProducer,
+        modifier = modifier,
+        marker = rememberMarker(),
+        horizontalLayout = HorizontalLayout.fullWidth(),
+    )
+}
 
 
 

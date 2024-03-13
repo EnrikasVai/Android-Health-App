@@ -5,7 +5,9 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.bakis.screens.DataScreen
+import com.example.bakis.graphscreen.HeartRateScreen
+import com.example.bakis.graphscreen.SleepScreen
+import com.example.bakis.graphscreen.StepScreen
 import com.example.bakis.screens.FirstTimeScreen
 import com.example.bakis.screens.HealthScreen
 import com.example.bakis.screens.HomeScreen
@@ -35,8 +37,14 @@ fun SetupNavigation(navController: NavHostController, homeViewModel: HomeViewMod
         composable("welcome") {
             WelcomeScreen(homeViewModel, navController)
         }
-        composable("data") {
-            DataScreen(navController, homeViewModel)
+        composable("stepData") {
+            StepScreen(navController, homeViewModel)
+        }
+        composable("sleepData"){
+            SleepScreen(navController, homeViewModel)
+        }
+        composable("bpmData") {
+            HeartRateScreen(navController, homeViewModel)
         }
         // Add any additional destinations here
     }
