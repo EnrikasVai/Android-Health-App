@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -96,9 +97,8 @@ fun HeartRateScreen(navController: NavHostController, viewModel: HomeViewModel =
                     .padding(top = 30.dp)
                 ) {
                     Box(modifier = Modifier
-                        .clip(shape = RoundedCornerShape(30.dp))
                         .padding(10.dp)
-                        .background(color = Color.DarkGray)
+                        .background(color = Color.DarkGray, shape = RoundedCornerShape(10.dp))
                     ) {
                         Text(
                             text="Average BPM: $averageBpmCount",
@@ -125,14 +125,17 @@ fun HeartRateScreen(navController: NavHostController, viewModel: HomeViewModel =
                             axisFormatter = bottomAxisValueFormatterMonth
                         )
                     }
-                    Row(modifier = Modifier
-                        .padding(top = 20.dp, end = 10.dp)
-                        .background(Color.LightGray, shape = RoundedCornerShape(8.dp))) {
+                    Row(modifier = Modifier.padding(top = 20.dp, end = 10.dp).fillMaxWidth().padding(start = 15.dp, end = 15.dp)) {
                         labels.forEachIndexed { index, label ->
+                            val shape = when (index) {
+                                0 -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
+                                labels.lastIndex -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
+                                else -> RectangleShape
+                            }
                             Box(
                                 modifier = Modifier
-                                    .weight(1f) // Equal weight to distribute spaceDarkGray
-                                    .background(if (label == selectedLabel.value) Color.LightGray else Color.DarkGray)
+                                    .weight(1f)
+                                    .background(if (label == selectedLabel.value) Color.LightGray else Color.DarkGray, shape = shape)
                                     .clickable { selectedLabel.value = label }
                                     .padding(8.dp),
                                 contentAlignment = Alignment.Center
@@ -210,14 +213,12 @@ private fun ComposeChart1(
 //private const val PERSISTENT_MARKER_X = 7f
 
 private val x = (1..50).toList()
-
 val daysOfWeek2 = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 private val bottomAxisValueFormatter =
     AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->
         // Use daysOfWeek to get the label for each x value
         daysOfWeek2[x.toInt() % daysOfWeek2.size]
     }
-
 val months2 = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul","Aug","Sep","Oct", "Nov", "Dec")
 private val bottomAxisValueFormatterMonth =
     AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->

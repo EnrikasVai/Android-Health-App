@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -26,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -61,12 +63,32 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 
-//data example
+//data example Steps
 val stepsPerDay = listOf(3000f, 5000f, 4500f, 2000f, 5500f, 7000f, 4000f)
 val stepsPerMonth = listOf(3000f, 5000f, 4500f, 2000f, 5500f, 7000f, 4000f, 3000f, 5000f, 4500f, 2000f, 5500f)
 val averageStepsDay = stepsPerDay.average()
 val averageStepsMonth = stepsPerMonth.average()
 var averageStepsCount = averageStepsMonth.toInt()
+//data example Sleep
+val sleepPerDayMin = listOf(300f, 800f, 900f, 500f, 550f, 700f, 400f)
+val sleepPerMonthMin = listOf(300f, 500f, 400f, 200f, 500f, 700f, 400f, 300f, 500f, 450f, 200f, 2000f)
+val averageSleepDay = sleepPerDayMin.average()
+val averageSleepMonth = sleepPerMonthMin.average()
+var averageSleepCount = averageSleepMonth.toInt()
+
+//Bottom axis labels
+val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+private val bottomAxisValueFormatter =
+    AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->
+        // Use daysOfWeek to get the label for each x value
+        daysOfWeek[x.toInt() % daysOfWeek.size]
+    }
+val months = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul","Aug","Sep","Oct", "Nov", "Dec")
+private val bottomAxisValueFormatterMonth =
+    AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->
+        // Use daysOfWeek to get the label for each x value
+        months[x.toInt() % months.size]
+    }
 
 @Composable
 fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hiltViewModel()) {
@@ -105,9 +127,8 @@ fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hilt
                     .padding(top = 30.dp)
                 ) {
                     Box(modifier = Modifier
-                        .clip(shape = RoundedCornerShape(30.dp))
                         .padding(10.dp)
-                        .background(color = Color.DarkGray)
+                        .background(color = Color.DarkGray, shape = RoundedCornerShape(10.dp))
                     ) {
                         Text(
                             text="Average Steps: $averageStepsCount",
@@ -120,24 +141,35 @@ fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hilt
                         Chart2(
                             modifier = Modifier
                                 .padding(end = 10.dp)
-                                .height(350.dp)
+                                .height(350.dp),
+                            stepData = stepsPerDay,
+                            axisFormatter = bottomAxisValueFormatter,
+                            scrollState = false,
+                            color = 0xffff5500
                         )
                     }
                     if(selectedLabel.value == "Month") {
-                        Chart3(
+                        Chart2(
                             modifier = Modifier
                                 .padding(end = 10.dp)
-                                .height(350.dp)
+                                .height(350.dp),
+                            stepData = stepsPerMonth,
+                            axisFormatter = bottomAxisValueFormatterMonth,
+                            scrollState = true,
+                            color = 0xffff5500
                         )
                     }
-                    Row(modifier = Modifier
-                        .padding(top = 20.dp, end = 10.dp)
-                        .background(Color.LightGray, shape = RoundedCornerShape(8.dp))) {
+                    Row(modifier = Modifier.padding(top = 20.dp, end = 10.dp).fillMaxWidth().padding(start = 15.dp, end = 15.dp)) {
                         labels.forEachIndexed { index, label ->
+                            val shape = when (index) {
+                                0 -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
+                                labels.lastIndex -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
+                                else -> RectangleShape
+                            }
                             Box(
                                 modifier = Modifier
-                                    .weight(1f) // Equal weight to distribute spaceDarkGray
-                                    .background(if (label == selectedLabel.value) Color.LightGray else Color.DarkGray)
+                                    .weight(1f)
+                                    .background(if (label == selectedLabel.value) Color.LightGray else Color.DarkGray, shape = shape)
                                     .clickable { selectedLabel.value = label }
                                     .padding(8.dp),
                                 contentAlignment = Alignment.Center
@@ -154,6 +186,10 @@ fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hilt
 @Composable
 internal fun Chart2(
     modifier: Modifier,
+    stepData: List<Float>,
+    axisFormatter: AxisValueFormatter<AxisPosition.Horizontal.Bottom>,
+    scrollState: Boolean,
+    color: Long
 ) {
     val modelProducer = remember { CartesianChartModelProducer.build() }
     LaunchedEffect(Unit) {
@@ -161,34 +197,35 @@ internal fun Chart2(
             while (isActive) {
                 modelProducer.tryRunTransaction {
                     columnSeries {
-                        series(stepsPerDay)
+                        series(stepData)
                     }
                 }
             }
         }
     }
-    ComposeChart2(modelProducer, modifier)
+    ComposeChart2(modelProducer, modifier, axisFormatter,scrollState, color)
 }
 @Composable
 private fun ComposeChart2(
     modelProducer: CartesianChartModelProducer,
     modifier: Modifier,
+    axisFormatter: AxisValueFormatter<AxisPosition.Horizontal.Bottom>,
+    scrollState: Boolean,
+    color: Long
 ) {
     CartesianChartHost(
-        scrollState =rememberVicoScrollState(scrollEnabled = false),
+        scrollState =rememberVicoScrollState(scrollEnabled = scrollState),
         chart =
         rememberCartesianChart(
             rememberColumnCartesianLayer(
                 listOf(
                     rememberLineComponent(
-                        color = Color(0xffff5500),
-                        thickness = 65.dp,
-                        shape = Shapes.roundedCornerShape(allPercent = 40),
-
-                        ),
+                        color = Color(color),
+                        thickness = 25.dp,
+                        shape = Shapes.roundedCornerShape(allPercent = 40)
+                    ),
                 ),
             ),
-
             startAxis = rememberStartAxis(
                 label = rememberAxisLabelComponent(Color.White),
                 axis = rememberAxisLineComponent(Color.White),
@@ -199,12 +236,12 @@ private fun ComposeChart2(
                 label = rememberAxisLabelComponent(Color.White),
                 axis = rememberAxisLineComponent(Color.White),
                 guideline = rememberAxisGuidelineComponent(Color.White),
-                valueFormatter = bottomAxisValueFormatter,
+                valueFormatter = axisFormatter,
                 tick = rememberAxisTickComponent(),
                 itemPlacer =
                 remember { AxisItemPlacer.Horizontal.default(spacing = 1, addExtremeLabelPadding = true) },
             ),
-            decorations = listOf(rememberComposeThresholdLine()),
+            decorations = listOf(rememberComposeThresholdLine(scrollState)),
         ),
         modelProducer = modelProducer,
         modifier = modifier,
@@ -213,68 +250,9 @@ private fun ComposeChart2(
     )
 }
 @Composable
-internal fun Chart3(
-    modifier: Modifier,
-) {
-    val modelProducer = remember { CartesianChartModelProducer.build() }
-    LaunchedEffect(Unit) {
-        withContext(Dispatchers.Default) {
-            while (isActive) {
-                modelProducer.tryRunTransaction {
-                    columnSeries {
-                        series(stepsPerMonth)
-                    }
-                }
-            }
-        }
-    }
-    ComposeChart3(modelProducer, modifier)
-}
-@Composable
-private fun ComposeChart3(
-    modelProducer: CartesianChartModelProducer,
-    modifier: Modifier,
-) {
-    CartesianChartHost(
-        //scrollState =rememberVicoScrollState(scrollEnabled = false),
-        chart =
-        rememberCartesianChart(
-            rememberColumnCartesianLayer(
-                listOf(
-                    rememberLineComponent(
-                        color = Color(0xffff5500),
-                        thickness = 30.dp,
-                        shape = Shapes.roundedCornerShape(allPercent = 40),
-
-                        ),
-                ),
-            ),
-
-            startAxis = rememberStartAxis(
-                label = rememberAxisLabelComponent(Color.White),
-                axis = rememberAxisLineComponent(Color.White),
-                guideline = rememberAxisGuidelineComponent(Color.White)
-            ),
-            bottomAxis =
-            rememberBottomAxis(
-                label = rememberAxisLabelComponent(Color.White),
-                axis = rememberAxisLineComponent(Color.White),
-                guideline = rememberAxisGuidelineComponent(Color.White),
-                valueFormatter = bottomAxisValueFormatterMonth,
-                tick = rememberAxisTickComponent(),
-                itemPlacer =
-                remember { AxisItemPlacer.Horizontal.default(spacing = 1, addExtremeLabelPadding = true) },
-            ),
-            decorations = listOf(rememberComposeThresholdLine1()),
-        ),
-        modelProducer = modelProducer,
-        modifier = modifier,
-        marker = rememberMarker(),
-        horizontalLayout = HorizontalLayout.fullWidth(),
-    )
-}
-@Composable
-private fun rememberComposeThresholdLine(): ThresholdLine {
+private fun rememberComposeThresholdLine(
+    thresholdLineForDisplay: Boolean
+): ThresholdLine {
     val color = Color(THRESHOLD_LINE_COLOR)
     val line = rememberShapeComponent(color = color)
     val label =
@@ -289,26 +267,10 @@ private fun rememberComposeThresholdLine(): ThresholdLine {
             typeface = Typeface.MONOSPACE,
         )
     return remember(line, label) {
-        ThresholdLine(thresholdValue = THRESHOLD_LINE_Y.toFloat(), lineComponent = line, labelComponent = label)
-    }
-}
-@Composable
-private fun rememberComposeThresholdLine1(): ThresholdLine {
-    val color = Color(THRESHOLD_LINE_COLOR)
-    val line = rememberShapeComponent(color = color)
-    val label =
-        rememberTextComponent(
-            background = rememberShapeComponent(Shapes.pillShape, color),
-            padding =
-            dimensionsOf(
-                THRESHOLD_LINE_LABEL_HORIZONTAL_PADDING_DP.dp,
-                THRESHOLD_LINE_LABEL_VERTICAL_PADDING_DP.dp,
-            ),
-            margins = dimensionsOf(THRESHOLD_LINE_LABEL_MARGIN_DP.dp),
-            typeface = Typeface.MONOSPACE,
-        )
-    return remember(line, label) {
-        ThresholdLine(thresholdValue = THRESHOLD_LINE_Y1.toFloat(), lineComponent = line, labelComponent = label)
+        if (!thresholdLineForDisplay)
+            ThresholdLine(thresholdValue = THRESHOLD_LINE_Y.toFloat(), lineComponent = line, labelComponent = label)
+        else
+            ThresholdLine(thresholdValue = THRESHOLD_LINE_Y1.toFloat(), lineComponent = line, labelComponent = label)
     }
 }
 private val THRESHOLD_LINE_Y1 = averageStepsMonth
@@ -318,30 +280,7 @@ private const val THRESHOLD_LINE_LABEL_HORIZONTAL_PADDING_DP = 8f
 private const val THRESHOLD_LINE_LABEL_VERTICAL_PADDING_DP = 2f
 private const val THRESHOLD_LINE_LABEL_MARGIN_DP = 4f
 
-//private val monthNames = DateFormatSymbols.getInstance(Locale.US).shortMonths
-//private val bottomAxisValueFormatter =
-//AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->
-//   "${monthNames[x.toInt() % 12]} ’${20 + x.toInt() / 12}"
-// }
-val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-private val bottomAxisValueFormatter =
-    AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->
-        // Use daysOfWeek to get the label for each x value
-        daysOfWeek[x.toInt() % daysOfWeek.size]
-    }
-val months = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul","Aug","Sep","Oct", "Nov", "Dec")
-private val bottomAxisValueFormatterMonth =
-    AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->
-        // Use daysOfWeek to get the label for each x value
-        months[x.toInt() % months.size]
-    }
 //************SLEEP DATA**************************
-//data example
-val sleepPerDayMin = listOf(300f, 800f, 900f, 500f, 550f, 700f, 400f)
-val sleepPerMonthMin = listOf(300f, 500f, 400f, 200f, 500f, 700f, 400f, 300f, 500f, 450f, 200f, 2000f)
-val averageSleepDay = sleepPerDayMin.average()
-val averageSleepMonth = sleepPerMonthMin.average()
-var averageSleepCount = averageSleepMonth.toInt()
 @Composable
 fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hiltViewModel()) {
     Scaffold(
@@ -378,9 +317,8 @@ fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hil
                     .padding(top = 30.dp)
                 ) {
                     Box(modifier = Modifier
-                        .clip(shape = RoundedCornerShape(30.dp))
                         .padding(10.dp)
-                        .background(color = Color.DarkGray)
+                        .background(color = Color.DarkGray, shape = RoundedCornerShape(10.dp))
                     ) {
                         Text(
                             text="Average Sleep: $averageSleepCount",
@@ -390,27 +328,38 @@ fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hil
                         )
                     }
                     if(selectedLabel.value == "Week") {
-                        ChartSleep1(
+                        Chart2(
                             modifier = Modifier
                                 .padding(end = 10.dp)
-                                .height(350.dp)
+                                .height(350.dp),
+                            stepData = sleepPerDayMin,
+                            axisFormatter = bottomAxisValueFormatter,
+                            scrollState = false,
+                            color = 0xFF09bfe8
                         )
                     }
                     if(selectedLabel.value == "Month") {
-                        ChartSleep2(
+                        Chart2(
                             modifier = Modifier
                                 .padding(end = 10.dp)
-                                .height(350.dp)
+                                .height(350.dp),
+                            stepData = sleepPerMonthMin,
+                            axisFormatter = bottomAxisValueFormatterMonth,
+                            scrollState = true,
+                            color = 0xFF09bfe8
                         )
                     }
-                    Row(modifier = Modifier
-                        .padding(top = 20.dp, end = 10.dp)
-                        .background(Color.LightGray, shape = RoundedCornerShape(8.dp))) {
+                    Row(modifier = Modifier.padding(top = 20.dp, end = 10.dp).fillMaxWidth().padding(start = 15.dp, end = 15.dp)) {
                         labels.forEachIndexed { index, label ->
+                            val shape = when (index) {
+                                0 -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
+                                labels.lastIndex -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
+                                else -> RectangleShape
+                            }
                             Box(
                                 modifier = Modifier
-                                    .weight(1f) // Equal weight to distribute spaceDarkGray
-                                    .background(if (label == selectedLabel.value) Color.LightGray else Color.DarkGray)
+                                    .weight(1f)
+                                    .background(if (label == selectedLabel.value) Color.LightGray else Color.DarkGray, shape = shape)
                                     .clickable { selectedLabel.value = label }
                                     .padding(8.dp),
                                 contentAlignment = Alignment.Center
@@ -424,134 +373,6 @@ fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hil
         }
     }
 }
-@Composable
-internal fun ChartSleep1(
-    modifier: Modifier,
-) {
-    val modelProducer = remember { CartesianChartModelProducer.build() }
-    LaunchedEffect(Unit) {
-        withContext(Dispatchers.Default) {
-            while (isActive) {
-                modelProducer.tryRunTransaction {
-                    columnSeries {
-                        series(sleepPerDayMin)
-                    }
-                }
-            }
-        }
-    }
-    ComposeChartSleep1(modelProducer, modifier)
-}
-@Composable
-private fun ComposeChartSleep1(
-    modelProducer: CartesianChartModelProducer,
-    modifier: Modifier,
-) {
-    CartesianChartHost(
-        scrollState =rememberVicoScrollState(scrollEnabled = false),
-        chart =
-        rememberCartesianChart(
-            rememberColumnCartesianLayer(
-                listOf(
-                    rememberLineComponent(
-                        color = Color(0xFF09bfe8),
-                        thickness = 65.dp,
-                        shape = Shapes.roundedCornerShape(allPercent = 40),
-
-                        ),
-                ),
-            ),
-            startAxis = rememberStartAxis(
-                label = rememberAxisLabelComponent(Color.White),
-                axis = rememberAxisLineComponent(Color.White),
-                guideline = rememberAxisGuidelineComponent(Color.White)
-            ),
-            bottomAxis =
-            rememberBottomAxis(
-                label = rememberAxisLabelComponent(Color.White),
-                axis = rememberAxisLineComponent(Color.White),
-                guideline = rememberAxisGuidelineComponent(Color.White),
-                valueFormatter = bottomAxisValueFormatter,
-                tick = rememberAxisTickComponent(),
-                itemPlacer =
-                remember { AxisItemPlacer.Horizontal.default(spacing = 1, addExtremeLabelPadding = true) },
-            ),
-            decorations = listOf(rememberComposeThresholdLine()),
-        ),
-        modelProducer = modelProducer,
-        modifier = modifier,
-        marker = rememberMarker(),
-        horizontalLayout = HorizontalLayout.fullWidth(),
-    )
-}
-@Composable
-internal fun ChartSleep2(
-    modifier: Modifier,
-) {
-    val modelProducer = remember { CartesianChartModelProducer.build() }
-    LaunchedEffect(Unit) {
-        withContext(Dispatchers.Default) {
-            while (isActive) {
-                modelProducer.tryRunTransaction {
-                    columnSeries {
-                        series(sleepPerMonthMin)
-                    }
-                }
-            }
-        }
-    }
-    ComposeChartSleep2(modelProducer, modifier)
-}
-@Composable
-private fun ComposeChartSleep2(
-    modelProducer: CartesianChartModelProducer,
-    modifier: Modifier,
-) {
-    CartesianChartHost(
-        chart =
-        rememberCartesianChart(
-            rememberColumnCartesianLayer(
-                listOf(
-                    rememberLineComponent(
-                        color = Color(0xFF09bfe8),
-                        thickness = 30.dp,
-                        shape = Shapes.roundedCornerShape(allPercent = 40),
-
-                        ),
-                ),
-            ),
-            startAxis = rememberStartAxis(
-                label = rememberAxisLabelComponent(Color.White),
-                axis = rememberAxisLineComponent(Color.White),
-                guideline = rememberAxisGuidelineComponent(Color.White)
-            ),
-            bottomAxis =
-            rememberBottomAxis(
-                label = rememberAxisLabelComponent(Color.White),
-                axis = rememberAxisLineComponent(Color.White),
-                guideline = rememberAxisGuidelineComponent(Color.White),
-                valueFormatter = bottomAxisValueFormatterMonth,
-                tick = rememberAxisTickComponent(),
-                itemPlacer =
-                remember { AxisItemPlacer.Horizontal.default(spacing = 1, addExtremeLabelPadding = true) },
-            ),
-            decorations = listOf(rememberComposeThresholdLine1()),
-        ),
-        modelProducer = modelProducer,
-        modifier = modifier,
-        marker = rememberMarker(),
-        horizontalLayout = HorizontalLayout.fullWidth(),
-    )
-}
-
-
-
-
-
-
-
-
-
 /* YCHARTS BLOGAI ATVAIZDUOJA
 /*
 @Composable

@@ -17,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -42,16 +41,15 @@ data class HealthScreenData(
 )
 
 @SuppressLint("SuspiciousIndentation")
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HealthScreen(navController: NavHostController, onNavigate: (String) -> Unit) {
     val items = listOf("Dashboard", "Health", "Me")
     val icons = listOf(Icons.Default.Build, Icons.Default.Favorite, Icons.Default.Person)
     val data = listOf(
-        HealthScreenData(R.drawable.footsteps,"HEALTH RISK CHECK", 0xFFFF7518, 0xFFFF3131, "screen1"),
-        HealthScreenData(R.drawable.footsteps,"HEALTH RISK CHECK", 0xFFFF7518, 0xFFFF3131, "screen1"),
-        HealthScreenData(R.drawable.footsteps,"HEALTH RISK CHECK", 0xFFFF7518, 0xFFFF3131, "screen1"),
-        HealthScreenData(R.drawable.footsteps,"HEALTH RISK CHECK", 0xFFFF7518, 0xFFFF3131, "screen1")
+        HealthScreenData(R.drawable.footsteps,"Heart Rate Zones", 0xFFFF7518, 0xFFFF3131, "heartRateZones"),
+        HealthScreenData(R.drawable.footsteps,"Exercise Tracking", 0xFFFF7518, 0xFFFF3131, "exerciseTracking"),
+        HealthScreenData(R.drawable.footsteps,"Stress Management", 0xFFFF7518, 0xFFFF3131, "stressManagement"),
+        HealthScreenData(R.drawable.footsteps,"Nutritional Tracking", 0xFFFF7518, 0xFFFF3131, "nutritionalTracking")
     )
         Scaffold(
         topBar = {

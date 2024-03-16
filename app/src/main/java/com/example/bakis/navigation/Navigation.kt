@@ -8,6 +8,10 @@ import androidx.navigation.compose.composable
 import com.example.bakis.graphscreen.HeartRateScreen
 import com.example.bakis.graphscreen.SleepScreen
 import com.example.bakis.graphscreen.StepScreen
+import com.example.bakis.healthscreens.ExerciseTracking
+import com.example.bakis.healthscreens.HeartRateZones
+import com.example.bakis.healthscreens.NutritionalTracking
+import com.example.bakis.healthscreens.StressManagement
 import com.example.bakis.screens.FirstTimeScreen
 import com.example.bakis.screens.HealthScreen
 import com.example.bakis.screens.HomeScreen
@@ -41,10 +45,22 @@ fun SetupNavigation(navController: NavHostController, homeViewModel: HomeViewMod
             StepScreen(navController, homeViewModel)
         }
         composable("sleepData"){
-            SleepScreen(navController, homeViewModel)
+           SleepScreen(navController, homeViewModel)
         }
         composable("bpmData") {
             HeartRateScreen(navController, homeViewModel)
+        }
+        composable("heartRateZones") {
+            HeartRateZones(navController)
+        }
+        composable("exerciseTracking") {
+            ExerciseTracking(navController)
+        }
+        composable("stressManagement") {
+            StressManagement(navController)
+        }
+        composable("nutritionalTracking") {
+            NutritionalTracking(navController)
         }
         // Add any additional destinations here
     }
