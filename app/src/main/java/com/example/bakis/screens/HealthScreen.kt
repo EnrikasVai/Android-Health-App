@@ -5,18 +5,22 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -26,11 +30,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.bakis.R
 import com.example.bakis.composables.CustomBottomNavigationBar
 import com.example.bakis.composables.CustomTopAppBar
+
 
 data class HealthScreenData(
     val iconId: Int,
@@ -44,12 +50,12 @@ data class HealthScreenData(
 @Composable
 fun HealthScreen(navController: NavHostController, onNavigate: (String) -> Unit) {
     val items = listOf("Dashboard", "Health", "Me")
-    val icons = listOf(Icons.Default.Build, Icons.Default.Favorite, Icons.Default.Person)
+    val icons = listOf(Icons.Default.Home, Icons.Default.Favorite, Icons.Default.Person)
     val data = listOf(
-        HealthScreenData(R.drawable.footsteps,"Heart Rate Zones", 0xFFFF7518, 0xFFFF3131, "heartRateZones"),
-        HealthScreenData(R.drawable.footsteps,"Exercise Tracking", 0xFFFF7518, 0xFFFF3131, "exerciseTracking"),
-        HealthScreenData(R.drawable.footsteps,"Stress Management", 0xFFFF7518, 0xFFFF3131, "stressManagement"),
-        HealthScreenData(R.drawable.footsteps,"Nutritional Tracking", 0xFFFF7518, 0xFFFF3131, "nutritionalTracking")
+        HealthScreenData(R.drawable.heartratezones,"Heart Rate Zones", 0xFFFF7518, 0xFFFF3131, "heartRateZones"),
+        HealthScreenData(R.drawable.exercise,"Exercise Tracking", 0xFFC492E6, 0xFF8A2BE2, "exerciseTracking"),
+        HealthScreenData(R.drawable.stress,"Stress Management", 0xFF0A0F44, 0xFF00C1D0, "stressManagement"),
+        HealthScreenData(R.drawable.nutrition,"Nutritional Tracking", 0xFFD147AB, 0xFFF8BBD0, "nutritionalTracking")
     )
         Scaffold(
         topBar = {
@@ -107,11 +113,20 @@ fun NavButton(
                 .padding(10.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = data.text,
-                style = MaterialTheme.typography.headlineMedium,
-                color = Color.White
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    painter = painterResource(id = data.iconId),
+                    contentDescription = data.text,
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = data.text,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = Color.White
+                )
+            }
         }
     }
 }

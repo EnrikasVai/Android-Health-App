@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -179,7 +180,7 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
             CustomBottomNavigationBar(
                 navController = navController,
                 items = listOf("Dashboard", "Health", "Me"),
-                icons = listOf(Icons.Default.Build, Icons.Default.Favorite, Icons.Default.Person)
+                icons = listOf(Icons.Default.Home, Icons.Default.Favorite, Icons.Default.Person)
             )
         }
     ) { paddingValues ->

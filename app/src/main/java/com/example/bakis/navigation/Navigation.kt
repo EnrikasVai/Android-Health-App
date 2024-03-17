@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.bakis.graphscreen.CaloriesScreen
 import com.example.bakis.graphscreen.HeartRateScreen
 import com.example.bakis.graphscreen.SleepScreen
 import com.example.bakis.graphscreen.StepScreen
@@ -61,6 +62,9 @@ fun SetupNavigation(navController: NavHostController, homeViewModel: HomeViewMod
         }
         composable("nutritionalTracking") {
             NutritionalTracking(navController)
+        }
+        composable("caloriesScreen"){
+            CaloriesScreen(navController = navController)
         }
         // Add any additional destinations here
     }

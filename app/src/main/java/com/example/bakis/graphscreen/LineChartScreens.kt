@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -23,7 +24,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
@@ -74,7 +74,7 @@ fun HeartRateScreen(navController: NavHostController, viewModel: HomeViewModel =
             CustomBottomNavigationBar(
                 navController = navController,
                 items = listOf("Dashboard", "Health", "Me"),
-                icons = listOf(Icons.Default.Build, Icons.Default.Favorite, Icons.Default.Person)
+                icons = listOf(Icons.Default.Home, Icons.Default.Favorite, Icons.Default.Person)
             )
         }
     ) { paddingValues ->
@@ -135,12 +135,12 @@ fun HeartRateScreen(navController: NavHostController, viewModel: HomeViewModel =
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .background(if (label == selectedLabel.value) Color.LightGray else Color.DarkGray, shape = shape)
+                                    .background(if (label == selectedLabel.value) Color(0xFFFF3131) else Color.DarkGray, shape = shape)
                                     .clickable { selectedLabel.value = label }
                                     .padding(8.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(text = label, color = if (label == selectedLabel.value) Color.Black else Color.White)
+                                Text(text = label, color = Color.White)
                             }
                         }
                     }

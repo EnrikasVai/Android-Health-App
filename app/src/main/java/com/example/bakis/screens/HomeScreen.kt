@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -75,15 +76,15 @@ val pieDataPoints = listOf(
 @Composable
 fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel(), navController: NavHostController) {
     val items = listOf("Dashboard", "Health", "Me")
-    val icons = listOf(Icons.Default.Build, Icons.Default.Favorite, Icons.Default.Person)
+    val icons = listOf(Icons.Default.Home, Icons.Default.Favorite, Icons.Default.Person)
     val userName by homeViewModel.userName.collectAsState()
     val data = listOf(
         //InfoData(R.drawable.footsteps, "Steps", "2000", 0xFFFF7518, "stepData"),
         //InfoData(R.drawable.bed, "Time In Bed", "8hr 35min",0xFF09bfe8,"sleepData"),
         InfoData(R.drawable.heart_beat, "Heart Rate", "67 bpm",0xFFFF3131,"bpmData"),
-        InfoData(R.drawable.bed, "Time In Bed", "20hr 35min", 0xFF09bfe8,"sleepData") ,
+        InfoData(R.drawable.glass_water, "Water Intake", "None", 0xFF1c37ff,"home") ,
         InfoData(R.drawable.bed, "Time In Bed", "20hr 35min", 0xFF09bfe8,"sleepData"),
-        InfoData(R.drawable.heart_beat, "Heart Rate", "67 bpm",0xFFFF3131,"bpmData"),
+        InfoData(R.drawable.calories, "Calories", "530 kcal",0xFFf52749,"caloriesScreen"),
     )
     val stepBoxData = StepData(R.drawable.footsteps, "Steps", "2000", 0xFFFF7518, "stepData", 5000)
     Scaffold(
@@ -146,9 +147,9 @@ fun StepBox(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .fillMaxWidth()
+            .width(356.dp)
             .height(200.dp)
-            .padding(start = 28.dp, end = 28.dp, bottom = 8.dp)
+            .padding( bottom = 8.dp)
             .shadow(8.dp, RoundedCornerShape(10.dp))
             .clip(RoundedCornerShape(10.dp))
             .background(Color(0xFF333333))
@@ -191,7 +192,7 @@ fun StepBox(
         //Donut CHART
         Box(modifier = Modifier
             .width(190.dp)
-            .height(187.dp)
+            .height(185.dp)
             .padding(16.dp)
         ) {
             AnimatedNPieChart(

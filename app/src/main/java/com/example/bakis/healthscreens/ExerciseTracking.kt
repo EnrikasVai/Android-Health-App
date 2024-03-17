@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -18,7 +19,7 @@ import com.example.bakis.composables.CustomTopAppBar
 @Composable
 fun ExerciseTracking(navController: NavController){
     val items = listOf("Dashboard", "Health", "Me")
-    val icons = listOf(Icons.Default.Build, Icons.Default.Favorite, Icons.Default.Person)
+    val icons = listOf(Icons.Default.Home, Icons.Default.Favorite, Icons.Default.Person)
     Scaffold(
         topBar = {
             CustomTopAppBar(

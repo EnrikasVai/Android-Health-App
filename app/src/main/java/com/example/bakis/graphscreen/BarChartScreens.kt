@@ -10,12 +10,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -25,7 +25,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
@@ -75,6 +74,13 @@ val sleepPerMonthMin = listOf(300f, 500f, 400f, 200f, 500f, 700f, 400f, 300f, 50
 val averageSleepDay = sleepPerDayMin.average()
 val averageSleepMonth = sleepPerMonthMin.average()
 var averageSleepCount = averageSleepMonth.toInt()
+//data example Calories
+val caloriesPerDayMin = listOf(1700f, 1863f, 1230f, 2023f, 1475f, 700f, 1900f)
+val caloriesPerMonthMin = listOf(1652f, 2530f, 1432f, 1896f, 1700f, 1863f, 1230f, 2023f, 1475f, 700f, 1900f, 1420f)
+val averageCaloriesDay = caloriesPerDayMin.average()
+val averageCaloriesMonth = caloriesPerMonthMin.average()
+var averageCaloriesCount = averageCaloriesMonth.toInt()
+
 
 //Bottom axis labels
 val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
@@ -104,7 +110,7 @@ fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hilt
             CustomBottomNavigationBar(
                 navController = navController,
                 items = listOf("Dashboard", "Health", "Me"),
-                icons = listOf(Icons.Default.Build, Icons.Default.Favorite, Icons.Default.Person)
+                icons = listOf(Icons.Default.Home, Icons.Default.Favorite, Icons.Default.Person)
             )
         }
     ) { paddingValues ->
@@ -169,12 +175,12 @@ fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hilt
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .background(if (label == selectedLabel.value) Color.LightGray else Color.DarkGray, shape = shape)
+                                    .background(if (label == selectedLabel.value) Color(0xffff5500) else Color.DarkGray, shape = shape)
                                     .clickable { selectedLabel.value = label }
                                     .padding(8.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(text = label, color = if (label == selectedLabel.value) Color.Black else Color.White)
+                                Text(text = label, color = Color.White)
                             }
                         }
                     }
@@ -295,7 +301,7 @@ fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hil
             CustomBottomNavigationBar(
                 navController = navController,
                 items = listOf("Dashboard", "Health", "Me"),
-                icons = listOf(Icons.Default.Build, Icons.Default.Favorite, Icons.Default.Person)
+                icons = listOf(Icons.Default.Home, Icons.Default.Favorite, Icons.Default.Person)
             )
         }
     ) { paddingValues ->
@@ -359,12 +365,104 @@ fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hil
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .background(if (label == selectedLabel.value) Color.LightGray else Color.DarkGray, shape = shape)
+                                    .background(if (label == selectedLabel.value) Color(0xFF09bfe8) else Color.DarkGray, shape = shape)
                                     .clickable { selectedLabel.value = label }
                                     .padding(8.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(text = label, color = if (label == selectedLabel.value) Color.Black else Color.White)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+@Composable
+fun CaloriesScreen(navController: NavHostController, viewModel: HomeViewModel = hiltViewModel()) {
+    Scaffold(
+        topBar = {
+            CustomTopAppBar(
+                title = "Calories Burned",
+                onEditClick = { /* ... */ },
+                showEditIcon = false // Only show the edit icon in the ProfileScreen
+            )
+        },
+        bottomBar = {
+            CustomBottomNavigationBar(
+                navController = navController,
+                items = listOf("Dashboard", "Health", "Me"),
+                icons = listOf(Icons.Default.Home, Icons.Default.Favorite, Icons.Default.Person)
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .fillMaxWidth()
+                .background(Color(0xFF262626)) // Set the background color here
+                .padding(top = 40.dp, start = 10.dp)
+                .padding(paddingValues) // Apply the padding here
+        ) {
+            item {
+                val labels = listOf("Week", "Month")
+                val selectedLabel = remember { mutableStateOf("Week") }
+                if(selectedLabel.value == "Week")
+                    averageCaloriesCount = averageCaloriesDay.toInt()
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 30.dp)
+                ) {
+                    Box(modifier = Modifier
+                        .padding(10.dp)
+                        .background(color = Color.DarkGray, shape = RoundedCornerShape(10.dp))
+                    ) {
+                        Text(
+                            text="Average Sleep: $averageCaloriesCount",
+                            color = Color.White,
+                            fontSize = 22.sp,
+                            modifier = Modifier.padding(10.dp)
+                        )
+                    }
+                    if(selectedLabel.value == "Week") {
+                        Chart2(
+                            modifier = Modifier
+                                .padding(end = 10.dp)
+                                .height(350.dp),
+                            stepData = caloriesPerDayMin,
+                            axisFormatter = bottomAxisValueFormatter,
+                            scrollState = false,
+                            color = 0xFFf52749
+                        )
+                    }
+                    if(selectedLabel.value == "Month") {
+                        Chart2(
+                            modifier = Modifier
+                                .padding(end = 10.dp)
+                                .height(350.dp),
+                            stepData = caloriesPerMonthMin,
+                            axisFormatter = bottomAxisValueFormatterMonth,
+                            scrollState = true,
+                            color = 0xFFf52749
+                        )
+                    }
+                    Row(modifier = Modifier.padding(top = 20.dp, end = 10.dp).fillMaxWidth().padding(start = 15.dp, end = 15.dp)) {
+                        labels.forEachIndexed { index, label ->
+                            val shape = when (index) {
+                                0 -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
+                                labels.lastIndex -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
+                                else -> RectangleShape
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .background(if (label == selectedLabel.value) Color(0xFFf52749) else Color.DarkGray, shape = shape)
+                                    .clickable { selectedLabel.value = label }
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = label, color = Color.White)
                             }
                         }
                     }

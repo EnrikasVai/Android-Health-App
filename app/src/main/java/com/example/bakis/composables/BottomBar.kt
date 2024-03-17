@@ -39,10 +39,10 @@ fun CustomBottomNavigationBar(
                 NavigationBarItem(
                     icon = {
                         Icon(icons[index], contentDescription = item,
-                            tint = if (isSelected) Color.Yellow else Color.White)
+                            tint = if (isSelected) Color(0xFFff681d) else Color.White)
                     },
                     label = {
-                        Text(text = item, color = if (isSelected) Color.Yellow else Color.White)
+                        Text(text = item, color = if (isSelected) Color(0xFFff681d)  else Color.White)
                     },
                     selected = isSelected,
                     onClick = {
