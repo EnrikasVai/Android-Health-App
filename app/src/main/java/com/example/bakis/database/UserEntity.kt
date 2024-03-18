@@ -27,6 +27,9 @@ data class UserEntity(
 
     @SerialName("sex")
     val sex: Boolean = true,
+
+    @SerialName("waterGoal")
+    val waterGoal: Int = 2000,
     )
 
 const val tableName = "UserEntity"

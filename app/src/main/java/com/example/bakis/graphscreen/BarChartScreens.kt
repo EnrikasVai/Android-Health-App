@@ -1,6 +1,7 @@
 package com.example.bakis.graphscreen
 
 import android.graphics.Typeface
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -13,14 +14,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -33,6 +36,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.bakis.composables.CustomBottomNavigationBar
 import com.example.bakis.composables.CustomTopAppBar
+import com.example.bakis.composables.WaterIntakeTracker
 import com.example.bakis.rememberMarker
 import com.example.bakis.viewmodel.HomeViewModel
 import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
@@ -58,9 +62,7 @@ import com.patrykandpatrick.vico.core.chart.layout.HorizontalLayout
 import com.patrykandpatrick.vico.core.component.shape.Shapes
 import com.patrykandpatrick.vico.core.model.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.model.columnSeries
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.withContext
+import java.util.Calendar
 
 //data example Steps
 val stepsPerDay = listOf(3000f, 5000f, 4500f, 2000f, 5500f, 7000f, 4000f)
@@ -82,17 +84,37 @@ val averageCaloriesMonth = caloriesPerMonthMin.average()
 var averageCaloriesCount = averageCaloriesMonth.toInt()
 
 
-//Bottom axis labels
-val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+
+fun calculateWeekDays(): List<String> {
+    val daysOfWeek = listOf("Sun","Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+    val calendar = Calendar.getInstance()
+    val today = calendar.get(Calendar.DAY_OF_WEEK) - 1 // Calendar.SUNDAY is 1
+    return (0 until 7).map { i ->
+        daysOfWeek[(today - i + 7) % 7]
+    }.reversed()
+}
+
+fun calculateMonths(): List<String> {
+    val months = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+    val calendar = Calendar.getInstance()
+    val thisMonth = calendar.get(Calendar.MONTH)
+    return (0 until 12).map { i ->
+        months[(thisMonth - i + 12) % 12]
+    }.reversed()
+}
+
+// Use the new function names here
+val daysOfWeek = calculateWeekDays()
 private val bottomAxisValueFormatter =
     AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->
         // Use daysOfWeek to get the label for each x value
         daysOfWeek[x.toInt() % daysOfWeek.size]
     }
-val months = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul","Aug","Sep","Oct", "Nov", "Dec")
+
+val months = calculateMonths()
 private val bottomAxisValueFormatterMonth =
     AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->
-        // Use daysOfWeek to get the label for each x value
+        // Use months to get the label for each x value
         months[x.toInt() % months.size]
     }
 
@@ -165,7 +187,10 @@ fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hilt
                             color = 0xffff5500
                         )
                     }
-                    Row(modifier = Modifier.padding(top = 20.dp, end = 10.dp).fillMaxWidth().padding(start = 15.dp, end = 15.dp)) {
+                    Row(modifier = Modifier
+                        .padding(top = 20.dp, end = 10.dp)
+                        .fillMaxWidth()
+                        .padding(start = 15.dp, end = 15.dp)) {
                         labels.forEachIndexed { index, label ->
                             val shape = when (index) {
                                 0 -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
@@ -175,7 +200,10 @@ fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hilt
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .background(if (label == selectedLabel.value) Color(0xffff5500) else Color.DarkGray, shape = shape)
+                                    .background(
+                                        if (label == selectedLabel.value) Color(0xffff5500) else Color.DarkGray,
+                                        shape = shape
+                                    )
                                     .clickable { selectedLabel.value = label }
                                     .padding(8.dp),
                                 contentAlignment = Alignment.Center
@@ -189,103 +217,6 @@ fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hilt
         }
     }
 }
-@Composable
-internal fun Chart2(
-    modifier: Modifier,
-    stepData: List<Float>,
-    axisFormatter: AxisValueFormatter<AxisPosition.Horizontal.Bottom>,
-    scrollState: Boolean,
-    color: Long
-) {
-    val modelProducer = remember { CartesianChartModelProducer.build() }
-    LaunchedEffect(Unit) {
-        withContext(Dispatchers.Default) {
-            while (isActive) {
-                modelProducer.tryRunTransaction {
-                    columnSeries {
-                        series(stepData)
-                    }
-                }
-            }
-        }
-    }
-    ComposeChart2(modelProducer, modifier, axisFormatter,scrollState, color)
-}
-@Composable
-private fun ComposeChart2(
-    modelProducer: CartesianChartModelProducer,
-    modifier: Modifier,
-    axisFormatter: AxisValueFormatter<AxisPosition.Horizontal.Bottom>,
-    scrollState: Boolean,
-    color: Long
-) {
-    CartesianChartHost(
-        scrollState =rememberVicoScrollState(scrollEnabled = scrollState),
-        chart =
-        rememberCartesianChart(
-            rememberColumnCartesianLayer(
-                listOf(
-                    rememberLineComponent(
-                        color = Color(color),
-                        thickness = 25.dp,
-                        shape = Shapes.roundedCornerShape(allPercent = 40)
-                    ),
-                ),
-            ),
-            startAxis = rememberStartAxis(
-                label = rememberAxisLabelComponent(Color.White),
-                axis = rememberAxisLineComponent(Color.White),
-                guideline = rememberAxisGuidelineComponent(Color.White)
-            ),
-            bottomAxis =
-            rememberBottomAxis(
-                label = rememberAxisLabelComponent(Color.White),
-                axis = rememberAxisLineComponent(Color.White),
-                guideline = rememberAxisGuidelineComponent(Color.White),
-                valueFormatter = axisFormatter,
-                tick = rememberAxisTickComponent(),
-                itemPlacer =
-                remember { AxisItemPlacer.Horizontal.default(spacing = 1, addExtremeLabelPadding = true) },
-            ),
-            decorations = listOf(rememberComposeThresholdLine(scrollState)),
-        ),
-        modelProducer = modelProducer,
-        modifier = modifier,
-        marker = rememberMarker(),
-        horizontalLayout = HorizontalLayout.fullWidth(),
-    )
-}
-@Composable
-private fun rememberComposeThresholdLine(
-    thresholdLineForDisplay: Boolean
-): ThresholdLine {
-    val color = Color(THRESHOLD_LINE_COLOR)
-    val line = rememberShapeComponent(color = color)
-    val label =
-        rememberTextComponent(
-            background = rememberShapeComponent(Shapes.pillShape, color),
-            padding =
-            dimensionsOf(
-                THRESHOLD_LINE_LABEL_HORIZONTAL_PADDING_DP.dp,
-                THRESHOLD_LINE_LABEL_VERTICAL_PADDING_DP.dp,
-            ),
-            margins = dimensionsOf(THRESHOLD_LINE_LABEL_MARGIN_DP.dp),
-            typeface = Typeface.MONOSPACE,
-        )
-    return remember(line, label) {
-        if (!thresholdLineForDisplay)
-            ThresholdLine(thresholdValue = THRESHOLD_LINE_Y.toFloat(), lineComponent = line, labelComponent = label)
-        else
-            ThresholdLine(thresholdValue = THRESHOLD_LINE_Y1.toFloat(), lineComponent = line, labelComponent = label)
-    }
-}
-private val THRESHOLD_LINE_Y1 = averageStepsMonth
-private val THRESHOLD_LINE_Y = averageStepsDay
-private const val THRESHOLD_LINE_COLOR = -2893786
-private const val THRESHOLD_LINE_LABEL_HORIZONTAL_PADDING_DP = 8f
-private const val THRESHOLD_LINE_LABEL_VERTICAL_PADDING_DP = 2f
-private const val THRESHOLD_LINE_LABEL_MARGIN_DP = 4f
-
 //************SLEEP DATA**************************
 @Composable
 fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hiltViewModel()) {
@@ -355,7 +286,10 @@ fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hil
                             color = 0xFF09bfe8
                         )
                     }
-                    Row(modifier = Modifier.padding(top = 20.dp, end = 10.dp).fillMaxWidth().padding(start = 15.dp, end = 15.dp)) {
+                    Row(modifier = Modifier
+                        .padding(top = 20.dp, end = 10.dp)
+                        .fillMaxWidth()
+                        .padding(start = 15.dp, end = 15.dp)) {
                         labels.forEachIndexed { index, label ->
                             val shape = when (index) {
                                 0 -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
@@ -365,7 +299,10 @@ fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hil
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .background(if (label == selectedLabel.value) Color(0xFF09bfe8) else Color.DarkGray, shape = shape)
+                                    .background(
+                                        if (label == selectedLabel.value) Color(0xFF09bfe8) else Color.DarkGray,
+                                        shape = shape
+                                    )
                                     .clickable { selectedLabel.value = label }
                                     .padding(8.dp),
                                 contentAlignment = Alignment.Center
@@ -447,7 +384,10 @@ fun CaloriesScreen(navController: NavHostController, viewModel: HomeViewModel = 
                             color = 0xFFf52749
                         )
                     }
-                    Row(modifier = Modifier.padding(top = 20.dp, end = 10.dp).fillMaxWidth().padding(start = 15.dp, end = 15.dp)) {
+                    Row(modifier = Modifier
+                        .padding(top = 20.dp, end = 10.dp)
+                        .fillMaxWidth()
+                        .padding(start = 15.dp, end = 15.dp)) {
                         labels.forEachIndexed { index, label ->
                             val shape = when (index) {
                                 0 -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
@@ -457,7 +397,10 @@ fun CaloriesScreen(navController: NavHostController, viewModel: HomeViewModel = 
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .background(if (label == selectedLabel.value) Color(0xFFf52749) else Color.DarkGray, shape = shape)
+                                    .background(
+                                        if (label == selectedLabel.value) Color(0xFFf52749) else Color.DarkGray,
+                                        shape = shape
+                                    )
                                     .clickable { selectedLabel.value = label }
                                     .padding(8.dp),
                                 contentAlignment = Alignment.Center
@@ -471,96 +414,228 @@ fun CaloriesScreen(navController: NavHostController, viewModel: HomeViewModel = 
         }
     }
 }
-/* YCHARTS BLOGAI ATVAIZDUOJA
-/*
 @Composable
-fun BarChart() {
-    val barChartData = listOf(3000f, 5000f, 2500f, 4000f, 1500f, 5500f, 2000f) // Your data goes here
-    val maxValue = barChartData.maxOrNull() ?: 0f
+fun WaterIntakeScreen(navController: NavHostController, viewModel: HomeViewModel = hiltViewModel()) {
+    val userId by viewModel.userId.collectAsState()
+    val dailyWaterIntakeTotals = viewModel.getDailyWaterIntakeTotalsForUser(userId)
+        .collectAsState(initial = emptyList()).value
+    val monthlyWaterIntakeTotals = viewModel.getMonthlyWaterIntakeTotalsForUser(userId)
+        .collectAsState(initial = emptyList()).value
+    val waterPerMonthMin = monthlyWaterIntakeTotals.map { it.second.toFloat() }
+    val waterPerDayMin = dailyWaterIntakeTotals.map { it.second.toFloat() }
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp)
-            .padding(16.dp),
-        contentAlignment = Alignment.BottomStart
-    ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            barChartData.forEachIndexed { index, value ->
-                val barHeight = (value / maxValue) * size.height
-                drawRoundRect(
-                    color = Color.Red,
-                    topLeft = Offset(
-                        x = (index * (size.width / barChartData.size)).toFloat(),
-                        y = size.height - barHeight
-                    ),
-                    size = androidx.compose.ui.geometry.Size(
-                        width = (size.width / barChartData.size) * 0.5f,
-                        height = barHeight
-                    ),
-                    cornerRadius = CornerRadius(5.dp.toPx(), 5.dp.toPx())
-                )
+    // Determine if data is still loading
+    val isLoading = dailyWaterIntakeTotals.isEmpty() && monthlyWaterIntakeTotals.isEmpty()
+
+    if (isLoading) {
+        // Show a loading spinner or some placeholder
+        CircularProgressIndicator()
+    } else {
+
+    val averageWaterDay = waterPerDayMin.average()
+    val averageWaterMonth = waterPerMonthMin.average()
+    var averageWaterCount = averageWaterDay.toInt()
+
+
+
+    val labels = listOf("Week", "Month")
+    val selectedLabel = remember { mutableStateOf("Week") }
+
+    Scaffold(
+        topBar = {
+            CustomTopAppBar(
+                title = "Water Intake",
+                onEditClick = { /* ... */ },
+                showEditIcon = false // Only show the edit icon in the ProfileScreen
+            )
+        },
+        bottomBar = {
+            CustomBottomNavigationBar(
+                navController = navController,
+                items = listOf("Dashboard", "Health", "Me"),
+                icons = listOf(Icons.Default.Home, Icons.Default.Favorite, Icons.Default.Person)
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .fillMaxWidth()
+                .background(Color(0xFF262626)) // Set the background color here
+                .padding(top = 10.dp, start = 10.dp)
+                .padding(paddingValues) // Apply the padding here
+        ) {
+            item {
+
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 30.dp)
+                ) {
+                    WaterIntakeTracker(viewModel)
+                    Box(modifier = Modifier
+                        .padding(10.dp, top = 30.dp)
+                        .background(color = Color.DarkGray, shape = RoundedCornerShape(10.dp))
+                    ) {
+                        Text(
+                            text="Average Water Intake: $averageWaterCount",
+                            color = Color.White,
+                            fontSize = 22.sp,
+                            modifier = Modifier.padding(10.dp)
+                        )
+                    }
+                    if(selectedLabel.value == "Week") {
+                        averageWaterCount = averageWaterMonth.toInt() // Correct way to assign value
+                        Chart2(
+                            modifier = Modifier
+                                .padding(end = 10.dp)
+                                .height(350.dp),
+                            stepData = waterPerDayMin,
+                            axisFormatter = bottomAxisValueFormatter,
+                            scrollState = false,
+                            color = 0xFF1c37ff
+                        )
+                    }
+                    if(selectedLabel.value == "Month") {
+                        averageWaterCount = averageWaterDay.toInt() // Correct way to assign value
+                        Chart2(
+                            modifier = Modifier
+                                .padding(end = 10.dp)
+                                .height(350.dp),
+                            stepData = waterPerMonthMin,
+                            axisFormatter = bottomAxisValueFormatterMonth,
+                            scrollState = true,
+                            color = 0xFF1c37ff
+                        )
+                    }
+                    Row(modifier = Modifier
+                        .padding(top = 20.dp, end = 10.dp)
+                        .fillMaxWidth()
+                        .padding(start = 15.dp, end = 15.dp, bottom = 50.dp)) {
+                        labels.forEachIndexed { index, label ->
+                            val shape = when (index) {
+                                0 -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
+                                labels.lastIndex -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
+                                else -> RectangleShape
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .background(
+                                        if (label == selectedLabel.value) Color(0xFF1c37ff) else Color.DarkGray,
+                                        shape = shape
+                                    )
+                                    .clickable { selectedLabel.value = label }
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = label, color = Color.White)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
+    }
+}
+//chart data
+@Composable
+internal fun Chart2(
+    modifier: Modifier,
+    stepData: List<Float>,
+    axisFormatter: AxisValueFormatter<AxisPosition.Horizontal.Bottom>,
+    scrollState: Boolean,
+    color: Long
+) {
+    val modelProducer = remember { CartesianChartModelProducer.build() }
+
+    // Trigger recomposition and model update when stepData changes
+    LaunchedEffect(stepData) {
+        Log.d("Chart2", "Updating chart model with new step data.")
+        modelProducer.tryRunTransaction {
+            columnSeries {
+                series(stepData)
+            }
+        }
+    }
+
+
+
+    // Your ComposeChart2 call remains the same
+    ComposeChart2(modelProducer, modifier, axisFormatter, scrollState, color)
 }
 
 @Composable
-private fun BarchartWithBackgroundColor() {
-
-    val weekdays = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-    val steps = listOf(3000, 5000, 7000, 8000, 10000, 12000, 2000)
-
-    val barData = weekdays.zip(steps).mapIndexed { index, (day, stepCount) ->
-        BarData(
-            point = Point(x = index.toFloat(), y = stepCount.toFloat()),
-            label = day,
-            color = Color(0xFFFF7518)
-        )
-    }
-    val maxStepValue = steps.maxOrNull() ?: 0
-    val maxRange = maxStepValue + 1000
-    val backgroundColor = Color(0xFF262626)
-    val yStepSize = 5
-    val xAxisData = AxisData.Builder()
-        .axisStepSize(60.dp)
-        .axisLineColor(Color.White)
-        .axisLabelColor(Color.White)
-        .steps(barData.size - 1)
-        .bottomPadding(10.dp)
-        .startDrawPadding(30.dp)
-        .axisLabelAngle(0f)
-        .labelData { index -> barData[index].label }
-        .backgroundColor(backgroundColor)
-        .build()
-    val yAxisData = AxisData.Builder()
-        .axisLineColor(Color.White)
-        .axisLabelColor(Color.White)
-        .steps(yStepSize)
-        .labelAndAxisLinePadding(35.dp)
-        .axisOffset(20.dp)
-        .backgroundColor(backgroundColor)
-        .labelData { index -> (index * (maxRange / yStepSize)).toString() }
-        .build()
-    val barChartData = BarChartData(
-        chartData = barData,
-        xAxisData = xAxisData,
-        yAxisData = yAxisData,
-        barStyle = BarStyle(paddingBetweenBars = 15.dp,
-            barWidth = 30.dp,
-            selectionHighlightData = SelectionHighlightData(
-                highlightBarColor = Color.Red,
-                highlightTextBackgroundColor = Color.Green,
-                popUpLabel = { _, y -> " Value : $y " }
-            )),
-        showYAxis = true,
-        showXAxis = true,
-        horizontalExtraSpace = 0.dp,
-        backgroundColor = backgroundColor
+private fun ComposeChart2(
+    modelProducer: CartesianChartModelProducer,
+    modifier: Modifier,
+    axisFormatter: AxisValueFormatter<AxisPosition.Horizontal.Bottom>,
+    scrollState: Boolean,
+    color: Long
+) {
+    CartesianChartHost(
+        scrollState =rememberVicoScrollState(scrollEnabled = scrollState),
+        chart =
+        rememberCartesianChart(
+            rememberColumnCartesianLayer(
+                listOf(
+                    rememberLineComponent(
+                        color = Color(color),
+                        thickness = 25.dp,
+                        shape = Shapes.roundedCornerShape(allPercent = 40)
+                    ),
+                ),
+            ),
+            startAxis = rememberStartAxis(
+                label = rememberAxisLabelComponent(Color.White),
+                axis = rememberAxisLineComponent(Color.White),
+                guideline = rememberAxisGuidelineComponent(Color.White)
+            ),
+            bottomAxis =
+            rememberBottomAxis(
+                label = rememberAxisLabelComponent(Color.White),
+                axis = rememberAxisLineComponent(Color.White),
+                guideline = rememberAxisGuidelineComponent(Color.White),
+                valueFormatter = axisFormatter,
+                tick = rememberAxisTickComponent(),
+                itemPlacer =
+                remember { AxisItemPlacer.Horizontal.default(spacing = 1, addExtremeLabelPadding = true) },
+            ),
+            decorations = listOf(rememberComposeThresholdLine(scrollState)),
+        ),
+        modelProducer = modelProducer,
+        modifier = modifier,
+        marker = rememberMarker(),
+        horizontalLayout = HorizontalLayout.fullWidth(),
     )
-    BarChart(modifier = Modifier
-        .height(300.dp),
-        barChartData = barChartData)
 }
-
- */
+@Composable
+private fun rememberComposeThresholdLine(
+    thresholdLineForDisplay: Boolean
+): ThresholdLine {
+    val color = Color(THRESHOLD_LINE_COLOR)
+    val line = rememberShapeComponent(color = color)
+    val label =
+        rememberTextComponent(
+            background = rememberShapeComponent(Shapes.pillShape, color),
+            padding =
+            dimensionsOf(
+                THRESHOLD_LINE_LABEL_HORIZONTAL_PADDING_DP.dp,
+                THRESHOLD_LINE_LABEL_VERTICAL_PADDING_DP.dp,
+            ),
+            margins = dimensionsOf(THRESHOLD_LINE_LABEL_MARGIN_DP.dp),
+            typeface = Typeface.MONOSPACE,
+        )
+    return remember(line, label) {
+        if (!thresholdLineForDisplay)
+            ThresholdLine(thresholdValue = THRESHOLD_LINE_Y.toFloat(), lineComponent = line, labelComponent = label)
+        else
+            ThresholdLine(thresholdValue = THRESHOLD_LINE_Y1.toFloat(), lineComponent = line, labelComponent = label)
+    }
+}
+private val THRESHOLD_LINE_Y1 = averageStepsMonth
+private val THRESHOLD_LINE_Y = averageStepsDay
+private const val THRESHOLD_LINE_COLOR = -2893786
+private const val THRESHOLD_LINE_LABEL_HORIZONTAL_PADDING_DP = 8f
+private const val THRESHOLD_LINE_LABEL_VERTICAL_PADDING_DP = 2f
+private const val THRESHOLD_LINE_LABEL_MARGIN_DP = 4f

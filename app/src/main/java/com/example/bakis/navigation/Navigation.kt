@@ -9,6 +9,7 @@ import com.example.bakis.graphscreen.CaloriesScreen
 import com.example.bakis.graphscreen.HeartRateScreen
 import com.example.bakis.graphscreen.SleepScreen
 import com.example.bakis.graphscreen.StepScreen
+import com.example.bakis.graphscreen.WaterIntakeScreen
 import com.example.bakis.healthscreens.ExerciseTracking
 import com.example.bakis.healthscreens.HeartRateZones
 import com.example.bakis.healthscreens.NutritionalTracking
@@ -65,6 +66,9 @@ fun SetupNavigation(navController: NavHostController, homeViewModel: HomeViewMod
         }
         composable("caloriesScreen"){
             CaloriesScreen(navController = navController)
+        }
+        composable("waterIntakeScreen"){
+            WaterIntakeScreen(navController = navController)
         }
         // Add any additional destinations here
     }

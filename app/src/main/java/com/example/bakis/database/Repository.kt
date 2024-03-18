@@ -1,5 +1,6 @@
 package com.example.bakis.database
 
+import androidx.room.Update
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.Flow
@@ -33,6 +34,12 @@ interface Repository {
     suspend fun updateUserWeight(id: Int, newWeight: Double)
     suspend fun updateUserHeight(id: Int, newHeight: Int)
     suspend fun updateUserSex(id: Int, newSex: Boolean)
+    suspend fun updateUserWaterGoal(id: Int, newWaterGoal: Int)
+
+        suspend fun insertWaterIntake(waterIntakeEntity: WaterIntakeEntity)
+        fun getAllWaterIntakesForUser(userId: Int): Flow<List<WaterIntakeEntity>>
+        fun getWaterIntakeForUserByDate(userId: Int, date: String): Flow<List<WaterIntakeEntity>>
+        suspend fun deleteWaterIntake(waterIntakeEntity: WaterIntakeEntity)
 
 
 }
@@ -95,6 +102,26 @@ class RepositoryImpl @Inject constructor(
         override suspend fun updateUserSex(id: Int, newSex: Boolean) {
                 withContext(IO) {
                         dao.updateUserSex(id, newSex)
+                }
+        }
+        override suspend fun updateUserWaterGoal(id: Int, newWaterGoal: Int) {
+                withContext(IO) {
+                        dao.updateUserWaterGoal(id, newWaterGoal)
+                }
+        }
+        override suspend fun insertWaterIntake(waterIntakeEntity: WaterIntakeEntity) {
+                withContext(IO) {
+                        dao.insertWaterIntake(waterIntakeEntity)
+                }
+        }
+
+        override fun getAllWaterIntakesForUser(userId: Int): Flow<List<WaterIntakeEntity>> = dao.getAllWaterIntakesForUser(userId)
+
+        override fun getWaterIntakeForUserByDate(userId: Int, date: String): Flow<List<WaterIntakeEntity>> = dao.getWaterIntakeForUserByDate(userId, date)
+
+        override suspend fun deleteWaterIntake(waterIntakeEntity: WaterIntakeEntity) {
+                withContext(IO) {
+                        dao.deleteWaterIntake(waterIntakeEntity)
                 }
         }
 

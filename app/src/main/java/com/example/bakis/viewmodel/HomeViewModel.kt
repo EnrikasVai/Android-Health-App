@@ -5,14 +5,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bakis.database.Repository
 import com.example.bakis.database.UserEntity
+import com.example.bakis.database.WaterIntakeEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,6 +28,12 @@ class HomeViewModel @Inject constructor(
 
     private val _studentDetailsList = MutableStateFlow(emptyList<UserEntity>())
     val userDetailsList = _studentDetailsList.asStateFlow()
+
+    private val _dailyWaterIntake = MutableStateFlow<List<WaterIntakeEntity>>(emptyList())
+    val dailyWaterIntake: StateFlow<List<WaterIntakeEntity>> = _dailyWaterIntake.asStateFlow()
+
+    private val _totalDailyIntake = MutableStateFlow(0)
+    val totalDailyIntake: StateFlow<Int> = _totalDailyIntake.asStateFlow()
 
     init {
         // Call getUserDetails upon initialization to fetch user details from the database
@@ -74,20 +86,29 @@ class HomeViewModel @Inject constructor(
     fun setUserAge(age: Int) {
         _userAge.tryEmit(age)
     }
+
     private val _userWeight = MutableStateFlow(60.0)
     val userWeight = _userWeight.asStateFlow()
     fun setUserWeight(weight: Double) {
         _userWeight.tryEmit(weight)
     }
+
     private val _userHeight = MutableStateFlow(160)
     val userHeight = _userHeight.asStateFlow()
     fun setUserHeight(height: Int) {
         _userHeight.tryEmit(height)
     }
+
     private val _userSex = MutableStateFlow(false)
     val userSex = _userSex.asStateFlow()
     fun setUserSex(sex: Boolean) {
         _userSex.tryEmit(sex)
+    }
+
+    private val _userWaterGoal = MutableStateFlow(2000)
+    val userWaterGoal = _userWaterGoal.asStateFlow()
+    fun setUserWaterGoal(waterGoal: Int) {
+        _userWaterGoal.tryEmit(waterGoal)
     }
 
     //Delete current user
@@ -124,6 +145,11 @@ class HomeViewModel @Inject constructor(
             repository.updateUserSex(userId, newSex)
         }
     }
+    fun updateUserWaterGoal(userId: Int, waterGoal: Int) {
+        viewModelScope.launch(IO) {
+            repository.updateUserWaterGoal(userId, waterGoal)
+        }
+    }
     private fun getUserDetails() {
         viewModelScope.launch(IO) {
             repository.getAllUsers().collectLatest { users ->
@@ -136,9 +162,95 @@ class HomeViewModel @Inject constructor(
                     _userHeight.emit(user.height)
                     _userSex.emit(user.sex)
                     _userId.emit(user.id)
+                    _userWaterGoal.emit(user.waterGoal)
                 }
             }
         }
     }
+    //water intake
+    fun addWaterIntake(userId: Int, intakeAmount: Int, date: String) {
+        viewModelScope.launch {
+            val waterIntakeEntity = WaterIntakeEntity(userId = userId, intakeAmount = intakeAmount, date = date)
+            repository.insertWaterIntake(waterIntakeEntity)
+            // Refresh daily intake
+            fetchDailyWaterIntakeForUser(userId, date)
+        }
+    }
+    // Assuming you have a function to fetch water intake records
+    val waterIntakeRecords = MutableStateFlow<List<WaterIntakeEntity>>(emptyList())
+
+    fun fetchWaterIntakeRecords(userId: Int) {
+        viewModelScope.launch {
+            repository.getAllWaterIntakesForUser(userId).collectLatest { records ->
+                waterIntakeRecords.value = records
+            }
+        }
+    }
+    fun fetchDailyWaterIntakeForUser(userId: Int, date: String) {
+        viewModelScope.launch(IO) {
+            repository.getWaterIntakeForUserByDate(userId, date).collectLatest { intakeRecords ->
+                _dailyWaterIntake.emit(intakeRecords)
+                _totalDailyIntake.emit(intakeRecords.sumOf { it.intakeAmount })
+            }
+        }
+    }
+
+    fun deleteWaterIntake(waterIntakeEntity: WaterIntakeEntity) {
+        viewModelScope.launch(IO) {
+            repository.deleteWaterIntake(waterIntakeEntity)
+            // Refresh daily intake
+            fetchDailyWaterIntakeForUser(waterIntakeEntity.userId, waterIntakeEntity.date)
+        }
+    }
+    // Goal management
+    private val _intakeGoal = MutableStateFlow(2000) // Default goal
+    val intakeGoal: StateFlow<Int> = _intakeGoal.asStateFlow()
+
+    fun setIntakeGoal(newGoal: Int) {
+        _intakeGoal.value = newGoal
+    }
+    //water graph logic
+    fun getDailyWaterIntakeTotalsForUser(userId: Int): Flow<List<Pair<String, Int>>> {
+        return repository.getAllWaterIntakesForUser(userId)
+            .map { waterIntakes ->
+                waterIntakes.filter {
+                    val intakeDate = LocalDate.parse(it.date, DateTimeFormatter.ISO_DATE)
+                    intakeDate.isAfter(LocalDate.now().minusDays(7)) || intakeDate.isEqual(LocalDate.now())
+                }
+                    .groupBy { it.date }
+                    .mapValues { (_, intakes) ->
+                        intakes.sumOf { it.intakeAmount }
+                    }
+                    .toList()
+                    .sortedByDescending { (date, _) -> LocalDate.parse(date, DateTimeFormatter.ISO_DATE) }
+                    .reversed()
+            }
+    }
+    fun getMonthlyWaterIntakeTotalsForUser(userId: Int): Flow<List<Pair<String, Int>>> {
+        return repository.getAllWaterIntakesForUser(userId)
+            .map { waterIntakes ->
+                // Generate a list of the last 12 months including the current month.
+                val lastTwelveMonths = (0L..11L).map {
+                    YearMonth.now().minusMonths(it).toString()
+                }.reversed()
+
+                // Filter and group the water intakes as before.
+                val intakeTotalsByMonth = waterIntakes.filter {
+                    val intakeDate = LocalDate.parse(it.date, DateTimeFormatter.ISO_DATE)
+                    YearMonth.from(intakeDate) in lastTwelveMonths.map { YearMonth.parse(it) }
+                }.groupBy {
+                    val intakeDate = LocalDate.parse(it.date, DateTimeFormatter.ISO_DATE)
+                    YearMonth.from(intakeDate).toString()
+                }.mapValues { (_, intakes) ->
+                    intakes.sumOf { it.intakeAmount }
+                }
+
+                // Ensure all months are represented, inserting zero for months without data.
+                lastTwelveMonths.map { month ->
+                    month to (intakeTotalsByMonth[month] ?: 0)
+                }
+            }
+    }
+
 }
 

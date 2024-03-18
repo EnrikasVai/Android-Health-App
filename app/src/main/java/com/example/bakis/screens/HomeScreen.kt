@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -43,6 +44,9 @@ import com.example.bakis.R
 import com.example.bakis.composables.CustomBottomNavigationBar
 import com.example.bakis.composables.CustomTopAppBar
 import com.example.bakis.viewmodel.HomeViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 data class InfoData(
     val iconId: Int,
@@ -77,16 +81,24 @@ val pieDataPoints = listOf(
 fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel(), navController: NavHostController) {
     val items = listOf("Dashboard", "Health", "Me")
     val icons = listOf(Icons.Default.Home, Icons.Default.Favorite, Icons.Default.Person)
+    val todaysWaterIntake by homeViewModel.totalDailyIntake.collectAsState()
     val userName by homeViewModel.userName.collectAsState()
     val data = listOf(
         //InfoData(R.drawable.footsteps, "Steps", "2000", 0xFFFF7518, "stepData"),
         //InfoData(R.drawable.bed, "Time In Bed", "8hr 35min",0xFF09bfe8,"sleepData"),
         InfoData(R.drawable.heart_beat, "Heart Rate", "67 bpm",0xFFFF3131,"bpmData"),
-        InfoData(R.drawable.glass_water, "Water Intake", "None", 0xFF1c37ff,"home") ,
+        InfoData(R.drawable.glass_water, "Water Intake", "$todaysWaterIntake ml", 0xFF1c37ff,"waterIntakeScreen") ,
         InfoData(R.drawable.bed, "Time In Bed", "20hr 35min", 0xFF09bfe8,"sleepData"),
         InfoData(R.drawable.calories, "Calories", "530 kcal",0xFFf52749,"caloriesScreen"),
     )
     val stepBoxData = StepData(R.drawable.footsteps, "Steps", "2000", 0xFFFF7518, "stepData", 5000)
+    val userId by homeViewModel.userId.collectAsState()
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val today = dateFormat.format(Date())
+    LaunchedEffect(key1 = userId) {
+        homeViewModel.fetchWaterIntakeRecords(userId)
+        homeViewModel.fetchDailyWaterIntakeForUser(userId, today)
+    }
     Scaffold(
         topBar = {
             CustomTopAppBar(
@@ -124,7 +136,8 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel(), navController: Na
                         pairList.forEach { infoData ->
                             InfoBox(
                                 infoData = infoData,
-                                navController = navController
+                                navController = navController,
+                                homeViewModel
                             )
                             if (infoData != pairList.last()) Spacer(modifier = Modifier.width(16.dp))
                         }
@@ -230,11 +243,13 @@ fun StepBox(
 @Composable
 fun InfoBox(
     infoData: InfoData,
-    navController: NavHostController
+    navController: NavHostController,
+    viewModel:HomeViewModel
 ) {
     val iconColor = Color(infoData.color)
     val textColor = Color(infoData.color)
     val navTag = infoData.nav
+
     Box(
         modifier = Modifier
             .size(170.dp)
