@@ -30,6 +30,9 @@ data class UserEntity(
 
     @SerialName("waterGoal")
     val waterGoal: Int = 2000,
+
+    @SerialName("stepGoal")
+    val stepGoal: Int = 5000,
     )
 
 const val tableName = "UserEntity"

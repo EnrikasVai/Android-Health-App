@@ -103,5 +103,9 @@ dependencies {
     // Houses the core logic for charts and other elements. Included in all other modules.
     implementation("com.patrykandpatrick.vico:core:2.0.0-alpha.11")
 
+    //Google Fit
+    implementation("com.google.android.gms:play-services-fitness:21.1.0")
+    implementation("com.google.android.gms:play-services-auth:20.5.0")
+
 
 }

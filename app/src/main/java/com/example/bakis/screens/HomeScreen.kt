@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
@@ -47,6 +46,7 @@ import com.example.bakis.viewmodel.HomeViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.roundToInt
 
 data class InfoData(
     val iconId: Int,
@@ -68,30 +68,39 @@ data class PieData(
     val value: Int,
     val color: Color,
 )
-//Calculate goal for now dummy data
-const val goal = 5000
-const val goalAchieved = 2000
-const val goalLeft = goal- goalAchieved
 
-val pieDataPoints = listOf(
-    PieData("Goal", goalAchieved, color = Color.Green),
-    PieData("Goal-left", goalLeft, color = Color.Yellow)
-)
 @Composable
 fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel(), navController: NavHostController) {
     val items = listOf("Dashboard", "Health", "Me")
     val icons = listOf(Icons.Default.Home, Icons.Default.Favorite, Icons.Default.Person)
     val todaysWaterIntake by homeViewModel.totalDailyIntake.collectAsState()
     val userName by homeViewModel.userName.collectAsState()
+
+    val sleepCount by homeViewModel.sleepCount.collectAsState()
+    //format sleep data
+    val hours = sleepCount.toInt() / 60
+    val remainingMinutes = sleepCount.toInt() % 60
+    //
+    val calCount by homeViewModel.calCount.collectAsState()
+    val bpmCount by homeViewModel.bpmCount.collectAsState()
+    val roundedBpmCount = bpmCount.toFloat().roundToInt()
+
     val data = listOf(
         //InfoData(R.drawable.footsteps, "Steps", "2000", 0xFFFF7518, "stepData"),
         //InfoData(R.drawable.bed, "Time In Bed", "8hr 35min",0xFF09bfe8,"sleepData"),
-        InfoData(R.drawable.heart_beat, "Heart Rate", "67 bpm",0xFFFF3131,"bpmData"),
+        InfoData(R.drawable.heart_beat, "Heart Rate", "$roundedBpmCount bpm",0xFFFF3131,"bpmData"),
         InfoData(R.drawable.glass_water, "Water Intake", "$todaysWaterIntake ml", 0xFF1c37ff,"waterIntakeScreen") ,
-        InfoData(R.drawable.bed, "Time In Bed", "20hr 35min", 0xFF09bfe8,"sleepData"),
-        InfoData(R.drawable.calories, "Calories", "530 kcal",0xFFf52749,"caloriesScreen"),
+        InfoData(R.drawable.bed, "Sleep", "${hours}h ${remainingMinutes}min", 0xFF09bfe8,"sleepData"),
+        InfoData(R.drawable.calories, "Calories", "$calCount kcal",0xFFf52749,"caloriesScreen"),
     )
-    val stepBoxData = StepData(R.drawable.footsteps, "Steps", "2000", 0xFFFF7518, "stepData", 5000)
+
+    val stepCount by homeViewModel.stepCount.collectAsState()
+    val userStepGoal by homeViewModel.userStepGoal.collectAsState()
+
+
+
+
+    val stepBoxData = StepData(R.drawable.footsteps, "Steps", stepCount, 0xFFFF7518, "stepData", userStepGoal)
     val userId by homeViewModel.userId.collectAsState()
     val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     val today = dateFormat.format(Date())
@@ -157,6 +166,16 @@ fun StepBox(
     val textColor = Color(infoData.color)
     val navTag = infoData.nav
     val goal = infoData.goal
+
+    val stepCount = infoData.value
+
+    val goalAchieved = stepCount.toInt()
+    val goalLeft = goal- goalAchieved
+
+    val pieDataPoints = listOf(
+        PieData("Goal", goalAchieved, color = Color(0xFFFF7518)),
+        PieData("Goal-left", goalLeft, color = Color(0xFFD3D3D3))
+    )
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -226,11 +245,11 @@ fun StepBox(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
                                 text = "Goal",
-                                color = Color.Green,
+                                color = Color(0xFFFF7518),
                                 textAlign = TextAlign.Center
                             )
                             Text(
-                                text = "2000/\n$goal",
+                                text = "$goal",
                                 color = Color.White,
                                 textAlign = TextAlign.End
                             )

@@ -45,6 +45,9 @@ interface MyDao {
     @Query("UPDATE UserEntity SET waterGoal = :waterGoal WHERE id = :id")
     suspend fun updateUserWaterGoal(id: Int, waterGoal: Int)
 
+    @Query("UPDATE UserEntity SET stepGoal = :stepGoal WHERE id = :id")
+    suspend fun updateUserStepGoal(id: Int, stepGoal: Int)
+
     // Insert a new water intake record
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertWaterIntake(waterIntakeEntity: WaterIntakeEntity)

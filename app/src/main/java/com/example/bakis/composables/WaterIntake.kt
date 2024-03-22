@@ -98,7 +98,7 @@ fun WaterIntakeTracker(homeViewModel: HomeViewModel=hiltViewModel()) {
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF08012e)),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text("Change goal")
+                    Text("Change goal", color = Color.White)
                 }
             }
 
@@ -111,7 +111,7 @@ fun WaterIntakeTracker(homeViewModel: HomeViewModel=hiltViewModel()) {
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF08012e)),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text("Set Cup Size")
+                    Text("Set Cup Size", color = Color.White)
                 }
             }
             Spacer(modifier = Modifier.height(30.dp))
@@ -145,7 +145,7 @@ fun WaterIntakeTracker(homeViewModel: HomeViewModel=hiltViewModel()) {
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.fillMaxWidth()
                 ) {
-                Text("Add Water Intake")
+                Text("Add Water Intake", color = Color.White)
             }
 
             Spacer(Modifier.height(16.dp))

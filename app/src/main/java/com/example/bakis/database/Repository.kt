@@ -35,6 +35,7 @@ interface Repository {
     suspend fun updateUserHeight(id: Int, newHeight: Int)
     suspend fun updateUserSex(id: Int, newSex: Boolean)
     suspend fun updateUserWaterGoal(id: Int, newWaterGoal: Int)
+    suspend fun updateUserStepGoal(id: Int, newStepGoal: Int)
 
         suspend fun insertWaterIntake(waterIntakeEntity: WaterIntakeEntity)
         fun getAllWaterIntakesForUser(userId: Int): Flow<List<WaterIntakeEntity>>
@@ -107,6 +108,11 @@ class RepositoryImpl @Inject constructor(
         override suspend fun updateUserWaterGoal(id: Int, newWaterGoal: Int) {
                 withContext(IO) {
                         dao.updateUserWaterGoal(id, newWaterGoal)
+                }
+        }
+        override suspend fun updateUserStepGoal(id: Int, newStepGoal: Int) {
+                withContext(IO) {
+                        dao.updateUserStepGoal(id, newStepGoal)
                 }
         }
         override suspend fun insertWaterIntake(waterIntakeEntity: WaterIntakeEntity) {
