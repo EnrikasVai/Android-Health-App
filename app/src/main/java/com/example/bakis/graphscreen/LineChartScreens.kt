@@ -12,12 +12,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
@@ -31,6 +30,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.SpanStyle
@@ -90,6 +90,8 @@ fun HeartRateScreen(navController: NavHostController, viewModel: HomeViewModel =
     val bottomAxisValueFormatterMonth = AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->
         rotatedMonths[(x % rotatedMonths.size).toInt()]
     }
+    val heartRateDataList by viewModel.weeklyHeartRateCountsMinMax.collectAsState()
+
     //data example
     val bpmPerDay by viewModel.weeklyHeartRateCounts.collectAsState()
     val bpmPerMonth by viewModel.monthlyHeartRateCounts.collectAsState()
@@ -132,14 +134,14 @@ fun HeartRateScreen(navController: NavHostController, viewModel: HomeViewModel =
                     ) {
                         if(selectedLabel.value == "Week")
                             Text(
-                                text="Average BPM: ${"%.2f".format(averageBpmDay)}",
+                                text="Average BPM: ${averageBpmDay.toInt()}",
                                 color = Color.White,
                                 fontSize = 22.sp,
                                 modifier = Modifier.padding(10.dp)
                             )
                         else
                             Text(
-                                text="Average BPM: ${"%.2f".format(averageBpmMonth)}",
+                                text="Average BPM: ${averageBpmMonth.toInt()}",
                                 color = Color.White,
                                 fontSize = 22.sp,
                                 modifier = Modifier.padding(10.dp)
@@ -222,10 +224,43 @@ fun HeartRateScreen(navController: NavHostController, viewModel: HomeViewModel =
 
                     }
                 }
+                Spacer(modifier = Modifier.height(30.dp))
+                HeartRateList(heartRateDataList = heartRateDataList)
             }
         }
     }
 }
+@Composable
+fun HeartRateList(heartRateDataList: List<Triple<String, Float, Float>>) {
+    Column {
+        Text("BPM Range This Week",color = Color.White,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 20.dp),
+            textAlign = TextAlign.Center,
+            fontSize = 20.sp
+        )
+        heartRateDataList.forEach { (date, min, max) ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp, end = 10.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color.DarkGray)
+                    .padding(16.dp)
+            ) {
+                Column {
+                    Text(text = date, Modifier.padding(bottom = 8.dp),color = Color.LightGray)
+                    if(min > 0)
+                        Text(text = "${min.toInt()} - ${max.toInt()} bpm", fontSize = 20.sp)
+                    else
+                        Text(text = "No Data", fontSize = 20.sp)
+                }
+            }
+        }
+    }
+}
+
 @Composable
 internal fun Chart1(
     modifier: Modifier,

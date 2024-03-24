@@ -1,6 +1,5 @@
 package com.example.bakis.graphscreen
 
-import android.graphics.Typeface
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
@@ -28,17 +26,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -61,13 +53,9 @@ import com.patrykandpatrick.vico.compose.chart.layout.fullWidth
 import com.patrykandpatrick.vico.compose.chart.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.chart.scroll.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.component.rememberLineComponent
-import com.patrykandpatrick.vico.compose.component.rememberShapeComponent
-import com.patrykandpatrick.vico.compose.component.rememberTextComponent
-import com.patrykandpatrick.vico.compose.dimensions.dimensionsOf
 import com.patrykandpatrick.vico.core.axis.AxisItemPlacer
 import com.patrykandpatrick.vico.core.axis.AxisPosition
 import com.patrykandpatrick.vico.core.axis.formatter.AxisValueFormatter
-import com.patrykandpatrick.vico.core.chart.decoration.ThresholdLine
 import com.patrykandpatrick.vico.core.chart.layout.HorizontalLayout
 import com.patrykandpatrick.vico.core.component.shape.Shapes
 import com.patrykandpatrick.vico.core.model.CartesianChartModelProducer
@@ -119,7 +107,6 @@ fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hilt
     val stepsPerDayFloats = stepsPerDay.map { it.toFloat() }
     val stepsPerMonth by viewModel.monthlyStepCounts.collectAsState()
     val averageStepsDay = stepsPerDay.filter { it > 0 }.average()
-    val averageStepsMonth = stepsPerMonth.filter { it > 0 }.average()
     val averageStepsMonthBox = stepsPerMonth.filter { it > 0 }.average()
 
     Scaffold(
@@ -160,14 +147,14 @@ fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hilt
                     ) {
                         if(selectedLabel.value == "Week")
                         Text(
-                            text="Average Steps: $averageStepsDay",
+                            text="Average Steps: ${averageStepsDay.toInt()}",
                             color = Color.White,
                             fontSize = 22.sp,
                             modifier = Modifier.padding(10.dp)
                         )
                         else
                             Text(
-                                text="Average Steps: $averageStepsMonthBox",
+                                text="Average Steps: ${averageStepsMonthBox.toInt()}",
                                 color = Color.White,
                                 fontSize = 22.sp,
                                 modifier = Modifier.padding(10.dp)
@@ -241,13 +228,23 @@ fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hilt
 }
 @Composable
 fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hiltViewModel()) {
-    //data example Sleep
     val sleepPerDayMin: List<Int> by viewModel.weeklySleepCounts.collectAsState()
-    val stepsPerDayFloats = sleepPerDayMin.map { it.toFloat() }
+    val sleepPerDayFloats = sleepPerDayMin.map { it.toFloat() }
     val sleepPerMonthMin by viewModel.monthlySleepCounts.collectAsState()
     val averageSleepDay = sleepPerDayMin.filter { it > 0 }.average()
     val averageSleepMonth = sleepPerMonthMin.filter { it > 0 }.average()
-    val averageSleepMonthBox = sleepPerMonthMin.filter { it > 0 }.average()
+
+    val averageSleepDayHours = (averageSleepDay / 60).toInt()
+    val averageSleepDayMinutes = (averageSleepDay % 60).toInt()
+    val formattedAverageSleepDay = "${averageSleepDayHours}h ${averageSleepDayMinutes}m"
+
+    val averageSleepMonthHours = (averageSleepMonth / 60).toInt()
+    val averageSleepMonthMinutes = (averageSleepMonth % 60).toInt()
+    val formattedAverageSleepMonth = "${averageSleepMonthHours}h ${averageSleepMonthMinutes}m"
+    // Converts each value to hours
+    val sleepPerDayHours = sleepPerDayFloats.map { it / 60 }
+    val sleepPerMonthHours = sleepPerMonthMin.map { it.toFloat() / 60 }
+
     Scaffold(
         topBar = {
             CustomTopAppBar(
@@ -285,14 +282,14 @@ fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hil
                     ) {
                         if(selectedLabel.value == "Week")
                             Text(
-                                text="Average Sleep: $averageSleepDay",
+                                text="Average Sleep: $formattedAverageSleepDay",
                                 color = Color.White,
                                 fontSize = 22.sp,
                                 modifier = Modifier.padding(10.dp)
                             )
                         else
                             Text(
-                                text="Average Sleep: $averageSleepMonth",
+                                text="Average Sleep: $formattedAverageSleepMonth",
                                 color = Color.White,
                                 fontSize = 22.sp,
                                 modifier = Modifier.padding(10.dp)
@@ -303,7 +300,7 @@ fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hil
                             modifier = Modifier
                                 .padding(end = 10.dp)
                                 .height(350.dp),
-                            stepData = stepsPerDayFloats,
+                            stepData = sleepPerDayFloats,
                             axisFormatter = bottomAxisValueFormatter,
                             scrollState = false,
                             color = 0xFF09bfe8
@@ -434,14 +431,14 @@ fun CaloriesScreen(navController: NavHostController, viewModel: HomeViewModel = 
                     ) {
                         if (selectedLabel.value == "Week") {
                             Text(
-                                text = "Average Calories: ${"%.2f".format(averageCaloriesDay)}",
+                                text = "Average Calories: ${averageCaloriesDay.toInt()}",
                                 color = Color.White,
                                 fontSize = 22.sp,
                                 modifier = Modifier.padding(10.dp)
                             )
                         } else {
                             Text(
-                                text = "Average Calories: ${"%.2f".format(averageCaloriesMonth)}",
+                                text = "Average Calories: ${averageCaloriesMonth.toInt()}",
                                 color = Color.White,
                                 fontSize = 22.sp,
                                 modifier = Modifier.padding(10.dp)

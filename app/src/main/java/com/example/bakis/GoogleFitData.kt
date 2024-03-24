@@ -658,7 +658,69 @@ class GoogleFitDataHandler(private val context: Context) {
             }
     }
 
+    //***********BPM MAX AND MIN FOR WEEKDAYS
+    interface HeartRateMinMaxDataWeekListener {
+        fun onHeartRateDataReceived(heartRateData: List<Triple<String, Float, Float>>)
+        fun onError(e: Exception)
+    }
 
+
+    fun readWeekHeartRateData(listener: HeartRateMinMaxDataWeekListener) {
+        val endCalendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }
+        val endTime = endCalendar.timeInMillis
+
+        val startCalendar = Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, -6)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startTime = startCalendar.timeInMillis
+
+        val readRequest = DataReadRequest.Builder()
+            .aggregate(DataType.TYPE_HEART_RATE_BPM)
+            .bucketByTime(1, TimeUnit.DAYS)
+            .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+            .build()
+
+        Fitness.getHistoryClient(context, GoogleSignIn.getLastSignedInAccount(context)!!)
+            .readData(readRequest)
+            .addOnSuccessListener { response ->
+                val heartRateDataWithDates = mutableListOf<Triple<String, Float, Float>>()
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val calendar = Calendar.getInstance()
+
+                response.buckets.reversed().forEach { bucket ->
+                    calendar.timeInMillis = bucket.getStartTime(TimeUnit.MILLISECONDS)
+                    val dateStr = dateFormat.format(calendar.time)
+                    val dataSet = bucket.dataSets.firstOrNull()
+
+                    if (dataSet != null && dataSet.dataPoints.isNotEmpty()) {
+                        val heartRates = dataSet.dataPoints.flatMap { dp ->
+                            dp.dataType.fields.map { field ->
+                                dp.getValue(field).asFloat()
+                            }
+                        }
+                        val minHeartRate = heartRates.minOrNull() ?: 0.0f
+                        val maxHeartRate = heartRates.maxOrNull() ?: 0.0f
+                        heartRateDataWithDates.add(Triple(dateStr, minHeartRate, maxHeartRate))
+                    } else {
+                        heartRateDataWithDates.add(Triple(dateStr, 0.0f, 0.0f))
+                    }
+                }
+
+                listener.onHeartRateDataReceived(heartRateDataWithDates)
+            }
+            .addOnFailureListener { e ->
+                listener.onError(e)
+            }
+    }
 
 
 

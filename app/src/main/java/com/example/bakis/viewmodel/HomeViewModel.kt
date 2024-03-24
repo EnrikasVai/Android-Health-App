@@ -60,6 +60,10 @@ class HomeViewModel @Inject constructor(
     val weeklyCaloriesCounts: StateFlow<List<Float>> = _weeklyCaloriesCounts.asStateFlow()
     private val _monthlyCaloriesCounts = MutableStateFlow<List<Float>>(emptyList())
     val monthlyCaloriesCounts: StateFlow<List<Float>> = _monthlyCaloriesCounts.asStateFlow()
+
+    private val _weeklyHeartRateCountsMinMax = MutableStateFlow<List<Triple<String, Float, Float>>>(emptyList())
+    val weeklyHeartRateCountsMinMax: StateFlow<List<Triple<String, Float, Float>>> = _weeklyHeartRateCountsMinMax.asStateFlow()
+
     init {
         fetchStepCount()
         fetchSleepCount()
@@ -73,6 +77,7 @@ class HomeViewModel @Inject constructor(
         fetchMonthlyHeartRateCounts()
         fetchWeeklyCaloriesCount()
         fetchMonthlyCaloriesCounts()
+        fetchWeeklyHeartRateMinMax()
     }
     fun fetchBpmCount() {
         val googleFitDataHandler = GoogleFitDataHandler(context)
@@ -237,6 +242,20 @@ class HomeViewModel @Inject constructor(
                 // Error handling remains the same
             }
         })
+    }
+    fun fetchWeeklyHeartRateMinMax() {
+        val googleFitDataHandler = GoogleFitDataHandler(context)
+        viewModelScope.launch {
+            googleFitDataHandler.readWeekHeartRateData(object :
+                GoogleFitDataHandler.HeartRateMinMaxDataWeekListener {
+                override fun onHeartRateDataReceived(heartRateData: List<Triple<String, Float, Float>>) {
+                    _weeklyHeartRateCountsMinMax.value = heartRateData
+                }
+                override fun onError(e: Exception) {
+                    Log.e("ViewModel", "Error fetching weekly heart rate data", e)
+                }
+            })
+        }
     }
 
 

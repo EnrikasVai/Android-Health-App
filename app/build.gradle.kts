@@ -91,7 +91,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 
     //graph YCHARTS gitHub
-    implementation ("co.yml:ycharts:2.1.0")
+    //implementation ("co.yml:ycharts:2.1.0")
 
     //graph VICO gitHub
     // For Jetpack Compose.
