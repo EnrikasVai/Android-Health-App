@@ -112,7 +112,9 @@ fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hilt
             CustomTopAppBar(
                 title = "Steps Data",
                 onEditClick = { /* ... */ },
-                showEditIcon = false // Only show the edit icon in the ProfileScreen
+                showEditIcon = false ,
+                showBackButton = true,
+                onBackClick = {navController.navigate("home")}
             )
         },
         bottomBar = {
@@ -254,7 +256,9 @@ fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hil
             CustomTopAppBar(
                 title = "Sleep Data",
                 onEditClick = { /* ... */ },
-                showEditIcon = false // Only show the edit icon in the ProfileScreen
+                showEditIcon = false,
+                showBackButton = true,
+                onBackClick = {navController.navigate("home")}
             )
         },
         bottomBar = {
@@ -404,7 +408,9 @@ fun CaloriesScreen(navController: NavHostController, viewModel: HomeViewModel = 
             CustomTopAppBar(
                 title = "Calories Burned",
                 onEditClick = { /* ... */ },
-                showEditIcon = false // Only show the edit icon in the ProfileScreen
+                showEditIcon = false,
+                showBackButton = true,
+                onBackClick = {navController.navigate("home")}
             )
         },
         bottomBar = {
@@ -573,7 +579,9 @@ fun WaterIntakeScreen(navController: NavHostController, viewModel: HomeViewModel
             CustomTopAppBar(
                 title = "Water Intake",
                 onEditClick = { /* ... */ },
-                showEditIcon = false // Only show the edit icon in the ProfileScreen
+                showEditIcon = false ,
+                showBackButton = true,
+                onBackClick = {navController.navigate("home")}
             )
         },
         bottomBar = {

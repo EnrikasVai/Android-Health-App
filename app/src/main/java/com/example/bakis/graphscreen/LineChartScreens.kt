@@ -104,7 +104,9 @@ fun HeartRateScreen(navController: NavHostController, viewModel: HomeViewModel =
             CustomTopAppBar(
                 title = "Heart Rate Data",
                 onEditClick = { /* ... */ },
-                showEditIcon = false // Only show the edit icon in the ProfileScreen
+                showEditIcon = false,
+                showBackButton = true,
+                onBackClick = {navController.navigate("home")}
             )
         },
         bottomBar = {
