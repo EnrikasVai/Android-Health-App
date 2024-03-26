@@ -16,6 +16,53 @@ import java.util.concurrent.TimeUnit
 
 class GoogleFitDataHandler(private val context: Context) {
 
+    fun readFitnessData(listener: TodayDataListener) {
+        val startCalendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startTime = startCalendar.timeInMillis
+
+        startCalendar.add(Calendar.DAY_OF_YEAR, 1)
+        val endTime = startCalendar.timeInMillis - 1
+
+        val readRequest = DataReadRequest.Builder()
+            .aggregate(DataType.TYPE_DISTANCE_DELTA, DataType.AGGREGATE_DISTANCE_DELTA)
+            .aggregate(DataType.TYPE_MOVE_MINUTES, DataType.AGGREGATE_MOVE_MINUTES)
+            .aggregate(DataType.TYPE_SPEED, DataType.AGGREGATE_SPEED_SUMMARY)
+            .bucketByTime(1, TimeUnit.DAYS)
+            .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+            .build()
+
+        Fitness.getHistoryClient(context, GoogleSignIn.getLastSignedInAccount(context)!!)
+            .readData(readRequest)
+            .addOnSuccessListener { response ->
+                val buckets = response.buckets
+                var totalDistance = 0.0
+                var moveMinutes = 0.0
+                var averageSpeed = 0.0
+                buckets.forEach { bucket ->
+                    bucket.dataSets.forEach { dataSet ->
+                        when (dataSet.dataType) {
+                            DataType.TYPE_DISTANCE_DELTA -> totalDistance += dataSet.dataPoints.sumOf { it.getValue(Field.FIELD_DISTANCE).asFloat().toDouble() }
+                            DataType.TYPE_MOVE_MINUTES -> moveMinutes += dataSet.dataPoints.sumOf { it.getValue(Field.FIELD_DURATION).asInt().toLong() }
+                        }
+                    }
+                }
+                listener.onStepDataReceived(totalDistance, moveMinutes, averageSpeed)
+            }
+            .addOnFailureListener { e ->
+                Log.e("GoogleFit", "There was a problem reading the data.", e)
+                listener.onError(e)
+            }
+    }
+    interface TodayDataListener {
+        fun onStepDataReceived(distance: Double, moveMinutes: Double, averageSpeed: Double)
+        fun onError(e: Exception)
+    }
+
 
     //Functions for retrieving Today's data steps, bpm, sleep, calories. Currently only used in home screen to show today's health data.
     interface StepDataListener {
@@ -334,10 +381,40 @@ class GoogleFitDataHandler(private val context: Context) {
                 response.dataSets.flatMap { it.dataPoints }.forEach { dataPoint ->
                     val startTimePoint = dataPoint.getStartTime(TimeUnit.MILLISECONDS)
                     val endTimePoint = dataPoint.getEndTime(TimeUnit.MILLISECONDS)
-                    val sleepDuration = TimeUnit.MILLISECONDS.toMinutes(endTimePoint - startTimePoint).toInt()
 
-                    val dateKey = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(startTimePoint))
-                    sleepMinutesPerDayMap[dateKey] = sleepMinutesPerDayMap.getOrDefault(dateKey, 0) + sleepDuration
+                    val durationMinutes = TimeUnit.MILLISECONDS.toMinutes(endTimePoint - startTimePoint).toInt()
+                    if (durationMinutes <= 0) {
+                        return@forEach // Skip if duration is not positive
+                    }
+
+                    val startCalendar = Calendar.getInstance().apply {
+                        timeInMillis = startTimePoint
+                    }
+                    val endCalendar = Calendar.getInstance().apply {
+                        timeInMillis = endTimePoint
+                    }
+
+                    // Ensure that the sleep duration is distributed correctly across days
+                    while (startCalendar.before(endCalendar)) {
+                        val dayKey = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(startCalendar.time)
+                        val endOfDay = startCalendar.clone() as Calendar
+                        endOfDay.set(Calendar.HOUR_OF_DAY, 23)
+                        endOfDay.set(Calendar.MINUTE, 59)
+                        endOfDay.set(Calendar.SECOND, 59)
+                        endOfDay.set(Calendar.MILLISECOND, 999)
+
+                        val sleepEnd = if (endCalendar.before(endOfDay)) endCalendar else endOfDay
+                        val dailySleepDuration = TimeUnit.MILLISECONDS.toMinutes(sleepEnd.timeInMillis - startCalendar.timeInMillis).toInt()
+
+                        sleepMinutesPerDayMap[dayKey] = sleepMinutesPerDayMap.getOrDefault(dayKey, 0) + dailySleepDuration
+
+                        // Prepare for the next day
+                        startCalendar.add(Calendar.DAY_OF_YEAR, 1)
+                        startCalendar.set(Calendar.HOUR_OF_DAY, 0)
+                        startCalendar.set(Calendar.MINUTE, 0)
+                        startCalendar.set(Calendar.SECOND, 0)
+                        startCalendar.set(Calendar.MILLISECOND, 0)
+                    }
                 }
 
                 // Convert the map to a list ordered by date
@@ -345,7 +422,6 @@ class GoogleFitDataHandler(private val context: Context) {
                 listener.onSleepDataReceived(sleepMinutesPerDay)
             }
             .addOnFailureListener { e ->
-                Log.e("GoogleFitSleepWeek", "There was a problem reading the sleep data.", e)
                 listener.onError(e)
             }
     }

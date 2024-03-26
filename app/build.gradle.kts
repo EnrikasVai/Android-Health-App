@@ -95,13 +95,13 @@ dependencies {
 
     //graph VICO gitHub
     // For Jetpack Compose.
-    implementation("com.patrykandpatrick.vico:compose:2.0.0-alpha.11")
+    implementation("com.patrykandpatrick.vico:compose:2.0.0-alpha.12")
     // For `compose`. Creates a `ChartStyle` based on an M2 Material Theme.
-    implementation("com.patrykandpatrick.vico:compose-m2:2.0.0-alpha.11")
+    implementation("com.patrykandpatrick.vico:compose-m2:2.0.0-alpha.12")
     // For `compose`. Creates a `ChartStyle` based on an M3 Material Theme.
-    implementation("com.patrykandpatrick.vico:compose-m3:2.0.0-alpha.11")
+    implementation("com.patrykandpatrick.vico:compose-m3:2.0.0-alpha.12")
     // Houses the core logic for charts and other elements. Included in all other modules.
-    implementation("com.patrykandpatrick.vico:core:2.0.0-alpha.11")
+    implementation("com.patrykandpatrick.vico:core:2.0.0-alpha.12")
 
     //Google Fit
     implementation("com.google.android.gms:play-services-fitness:21.1.0")

@@ -44,6 +44,10 @@ fun StepProgressBar(stepsWalked: Int, stepGoal: Int, viewModel: HomeViewModel = 
     var showGoalDialog by remember { mutableStateOf(false) }
     val userStepGoal by viewModel.userStepGoal.collectAsState()
 
+    val movedMinutes by viewModel.todayMoveMinutes.collectAsState()
+    val moveSpeed by viewModel.todayAverageSpeed.collectAsState()
+    val movedDistance by viewModel.todayDistance.collectAsState()
+
     var StepsForGoal = stepsWalked
     if(stepsWalked>=userStepGoal)
         StepsForGoal=userStepGoal
@@ -98,6 +102,7 @@ fun StepProgressBar(stepsWalked: Int, stepGoal: Int, viewModel: HomeViewModel = 
             }
         }
     }
+    //Spacer(modifier = Modifier.height(20.dp))
 }
 
 @Composable

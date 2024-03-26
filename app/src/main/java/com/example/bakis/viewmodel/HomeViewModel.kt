@@ -40,6 +40,13 @@ class HomeViewModel @Inject constructor(
     val calCount = _calCount.asStateFlow()
     private val _bpmCount = MutableStateFlow("0")
     val bpmCount = _bpmCount.asStateFlow()
+    private val _todayDistance = MutableStateFlow(0.0)
+    val todayDistance = _todayDistance.asStateFlow()
+    private val _todayMoveMinutes = MutableStateFlow(0.0)
+    val todayMoveMinutes = _todayMoveMinutes.asStateFlow()
+    private val _todayAverageSpeed = MutableStateFlow(0.0)
+    val todayAverageSpeed = _todayAverageSpeed.asStateFlow()
+
 
     private val _weeklyStepCounts = MutableStateFlow<List<Int>>(emptyList())
     val weeklyStepCounts = _weeklyStepCounts.asStateFlow()
@@ -78,18 +85,33 @@ class HomeViewModel @Inject constructor(
         fetchWeeklyCaloriesCount()
         fetchMonthlyCaloriesCounts()
         fetchWeeklyHeartRateMinMax()
+        fetchFitnessData()
+    }
+    fun fetchFitnessData() {
+        val googleFitDataHandler = GoogleFitDataHandler(context)
+
+        googleFitDataHandler.readFitnessData(object : GoogleFitDataHandler.TodayDataListener {
+            override fun onStepDataReceived(distance: Double, moveMinutes: Double, averageSpeed: Double) {
+                viewModelScope.launch {
+                    _todayDistance.value = distance
+                    _todayMoveMinutes.value = moveMinutes
+                    _todayAverageSpeed.value = averageSpeed
+                }
+            }
+            override fun onError(e: Exception) {
+                Log.e("FitnessViewModel", "Error fetching fitness data", e)
+            }
+        })
     }
     fun fetchBpmCount() {
         val googleFitDataHandler = GoogleFitDataHandler(context)
         googleFitDataHandler.readHeartRateData(object : GoogleFitDataHandler.HeartRateDataListener {
             override fun onHeartRateDataReceived(bpmCount: Float) {
-                // Post value to _stepCount StateFlow
                 _bpmCount.value = bpmCount.toString()
             }
 
             override fun onError(e: Exception) {
                 Log.e("HomeViewModel", "Error fetching step count", e)
-                // Handle error, maybe set _stepCount value to an error message or zero
             }
         })
     }
@@ -97,13 +119,11 @@ class HomeViewModel @Inject constructor(
         val googleFitDataHandler = GoogleFitDataHandler(context)
         googleFitDataHandler.readStepData(object : GoogleFitDataHandler.StepDataListener {
             override fun onStepDataReceived(stepCount: Int) {
-                // Post value to _stepCount StateFlow
                 _stepCount.value = stepCount.toString()
             }
 
             override fun onError(e: Exception) {
                 Log.e("HomeViewModel", "Error fetching step count", e)
-                // Handle error, maybe set _stepCount value to an error message or zero
             }
         })
     }
@@ -112,13 +132,11 @@ class HomeViewModel @Inject constructor(
         val googleFitDataHandler = GoogleFitDataHandler(context)
         googleFitDataHandler.readSleepData(object : GoogleFitDataHandler.SleepDataListener {
             override fun onSleepDataReceived(sleepCount: Int) {
-                // Post value to _stepCount StateFlow
                 _sleepCount.value = sleepCount.toString()
             }
 
             override fun onError(e: Exception) {
                 Log.e("HomeViewModel", "Error fetching sleep count", e)
-                // Handle error, maybe set _stepCount value to an error message or zero
             }
         })
     }
@@ -131,7 +149,6 @@ class HomeViewModel @Inject constructor(
 
             override fun onError(e: Exception) {
                 Log.e("HomeViewModel", "Error fetching calorie count", e)
-                // Handle the error, possibly setting _calCount to an error message or zero
             }
         })
     }
@@ -144,7 +161,6 @@ class HomeViewModel @Inject constructor(
 
             override fun onError(e: Exception) {
                 Log.e("HomeViewModel", "Error fetching weekly step count", e)
-                // Handle error, maybe set _weeklyStepCounts value to an empty list or some error indication
             }
         })
     }
@@ -157,7 +173,6 @@ class HomeViewModel @Inject constructor(
 
             override fun onError(e: Exception) {
                 Log.e("ViewModel", "Error fetching monthly step counts", e)
-                // Error handling remains the same
             }
         })
     }
@@ -170,7 +185,6 @@ class HomeViewModel @Inject constructor(
 
             override fun onError(e: Exception) {
                 Log.e("HomeViewModel", "Error fetching weekly sleep count", e)
-                // Handle error, maybe set _weeklySleepCounts value to an empty list or some error indication
             }
         })
     }
@@ -183,7 +197,6 @@ class HomeViewModel @Inject constructor(
 
             override fun onError(e: Exception) {
                 Log.e("ViewModel", "Error fetching monthly step counts", e)
-                // Error handling remains the same
             }
         })
     }
@@ -191,14 +204,11 @@ class HomeViewModel @Inject constructor(
         val googleFitDataHandler = GoogleFitDataHandler(context)
         googleFitDataHandler.readWeekHeartRateData(object : GoogleFitDataHandler.HeartRateDataWeekListener {
             override fun onHeartRateDataReceived(heartRateCounts: List<Float>) {
-                // Assuming _weeklyHeartRateCounts is a LiveData or similar observable data holder for the UI
-                // This variable should be defined somewhere in your ViewModel or similar structure
                 _weeklyHeartRateCounts.value = heartRateCounts
             }
 
             override fun onError(e: Exception) {
                 Log.e("HomeViewModel", "Error fetching weekly heart rate data", e)
-                // Handle error, maybe set _weeklyHeartRateCounts value to an empty list or some error indication
             }
         })
     }

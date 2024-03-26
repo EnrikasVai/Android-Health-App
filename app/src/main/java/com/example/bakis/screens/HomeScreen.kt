@@ -62,7 +62,10 @@ data class StepData(
     val value: String,
     val color: Long,
     val nav: String,
-    val goal: Int
+    val goal: Int,
+    val min: Double,
+    val speed: Double,
+    val distance: Double
 )
 data class PieData(
     val label: String,
@@ -99,9 +102,11 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel(), navController: Na
     val userStepGoal by homeViewModel.userStepGoal.collectAsState()
 
 
+    val movedMinutes by homeViewModel.todayMoveMinutes.collectAsState()
+    val moveSpeed by homeViewModel.todayAverageSpeed.collectAsState()
+    val movedDistance by homeViewModel.todayDistance.collectAsState()
 
-
-    val stepBoxData = StepData(R.drawable.footsteps, "Steps", stepCount, 0xFFFF7518, "stepData", userStepGoal)
+    val stepBoxData = StepData(R.drawable.footsteps, "Steps, Activity", stepCount, 0xFFFF7518, "stepData", userStepGoal, movedMinutes, moveSpeed, movedDistance)
     val userId by homeViewModel.userId.collectAsState()
     val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     val today = dateFormat.format(Date())
@@ -177,96 +182,141 @@ fun StepBox(
         PieData("Goal", goalAchieved, color = Color(0xFFFF7518)),
         PieData("Goal-left", goalLeft, color = Color(0xFFD3D3D3))
     )
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .width(356.dp)
-            .height(200.dp)
-            .padding( bottom = 8.dp)
-            .shadow(8.dp, RoundedCornerShape(10.dp))
-            .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFF333333))
-            .clickable { navController.navigate(navTag) },
-    ) {
-        Box(modifier = Modifier.height(200.dp).width(170.dp)){
-            Row(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(12.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = infoData.iconId),
-                    contentDescription = infoData.text,
-                    tint = iconColor,
-                    modifier = Modifier.size(20.dp)
-                )
-                Text(
-                    text = infoData.text,
-                    color = textColor,
-                    modifier = Modifier
-                        .align(Alignment.CenterVertically)
-                        .padding(start = 4.dp)
-                )
-            }
-            Text(
-                text = infoData.value,
-                style = MaterialTheme.typography.headlineMedium,
-                color = Color.White,
-                modifier = Modifier.align(Alignment.Center)
-            )
-            Text(
-                text = "Today",
-                color = iconColor,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(12.dp)
-            )
-        }
-        //Donut CHART
-        Box(modifier = Modifier
-            .width(190.dp)
-            .height(185.dp)
-            .padding(16.dp)
+    Column (modifier = Modifier.padding(bottom = 8.dp).shadow(8.dp, RoundedCornerShape(10.dp)).clickable { navController.navigate(navTag) }){
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .width(356.dp)
+                .height(200.dp)
+                //.padding(bottom = 8.dp)
+                //.shadow(8.dp, RoundedCornerShape(10.dp))
+                .clip(RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp))
+                .background(Color(0xFF333333))
         ) {
-            AnimatedNPieChart(
+            Box(
                 modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(200.dp),
-                pieDataPoints = pieDataPoints
+                    .height(200.dp)
+                    .width(170.dp)
             ) {
                 Row(
-                    modifier = it
-                        .padding(20.dp)
-                        .fillMaxSize()
-                        .padding(16.dp)
-                        .scale(1f),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceAround
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(12.dp)
                 ) {
+                    Icon(
+                        painter = painterResource(id = infoData.iconId),
+                        contentDescription = infoData.text,
+                        tint = iconColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = infoData.text,
+                        color = textColor,
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .padding(start = 4.dp)
+                    )
+                }
+                Text(
+                    text = infoData.value,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color.White,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+                Text(
+                    text = "Today",
+                    color = iconColor,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(12.dp)
+                )
+            }
+            //Donut CHART
+            Box(
+                modifier = Modifier
+                    .width(190.dp)
+                    .height(185.dp)
+                    .padding(16.dp)
+            ) {
+                AnimatedNPieChart(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(200.dp),
+                    pieDataPoints = pieDataPoints
+                ) {
+                    Row(
+                        modifier = it
+                            .padding(20.dp)
+                            .fillMaxSize()
+                            .padding(16.dp)
+                            .scale(1f),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceAround
+                    ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
                                 text = "Goal",
                                 color = Color(0xFFFF7518),
                                 textAlign = TextAlign.Center
                             )
-                            if(stepCount < goal.toString())
                             Text(
                                 text = "$goal",
                                 color = Color.White,
                                 textAlign = TextAlign.End
                             )
-                            else
-                                Text(
-                                    text = "REACHED!",
-                                    color = Color.White,
-                                    textAlign = TextAlign.End,
-                                    fontSize = 15.sp
-                                )
                         }
+                    }
                 }
+            }
+
+        }
+        Row(
+            modifier = Modifier
+                .width(356.dp)
+                //.shadow(8.dp, RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp))
+                .clip(RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp))
+                .background(color = Color(0xFF333333))
+                .padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically // Align items vertically in the center
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f) // Equal weight
+                    .padding(4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) { // Optional padding for visual adjustment
+                Text(text = "${infoData.min.toInt()}", color = Color.White, fontSize = 20.sp)
+                Text(text = "Min", color = Color.White)
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f) // Equal weight
+                    .padding(4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Format the distance to two decimal places
+                val formattedDistance = String.format("%.2f", infoData.distance / 1000)
+                Text(text = formattedDistance, color = Color.White, fontSize = 20.sp)
+                Text(text = "Km", color = Color.White)
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f) // Equal weight
+                    .padding(4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                val distanceInKm = infoData.distance / 1000
+                val timeInHours = infoData.min / 60
+
+                val speedKmH = if (timeInHours > 0) distanceInKm / timeInHours else 0.0
+
+                val formattedSpeed = String.format("%.2f", speedKmH)
+                Text(text = formattedSpeed, color = Color.White, fontSize = 20.sp)
+                Text(text = "km/h", color = Color.White)
             }
         }
     }
+
 }
 @Composable
 fun InfoBox(

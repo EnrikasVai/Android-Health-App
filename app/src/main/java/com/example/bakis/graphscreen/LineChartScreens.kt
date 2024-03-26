@@ -44,7 +44,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.bakis.composables.CustomBottomNavigationBar
 import com.example.bakis.composables.CustomTopAppBar
-import com.example.bakis.rememberMarker
+import com.example.bakis.graphscreen.rememberMarker
 import com.example.bakis.viewmodel.HomeViewModel
 import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
 import com.patrykandpatrick.vico.compose.axis.rememberAxisGuidelineComponent
@@ -97,6 +97,8 @@ fun HeartRateScreen(navController: NavHostController, viewModel: HomeViewModel =
     val bpmPerMonth by viewModel.monthlyHeartRateCounts.collectAsState()
     val averageBpmDay = bpmPerDay.filter { it > 0 }.average()
     val averageBpmMonth = bpmPerMonth.filter { it > 0 }.average()
+
+    val markerText = "Average BPM:"
     Scaffold(
         topBar = {
             CustomTopAppBar(
@@ -153,7 +155,8 @@ fun HeartRateScreen(navController: NavHostController, viewModel: HomeViewModel =
                                 .padding(end = 10.dp)
                                 .height(350.dp),
                             bpmData = bpmPerDay, // Pass bpmPerDay data
-                            axisFormatter = bottomAxisValueFormatter // Week formatter
+                            axisFormatter = bottomAxisValueFormatter, // Week formatter
+                            markerText = markerText
                         )
                     }
                     if(selectedLabel.value == "Month") {
@@ -162,7 +165,8 @@ fun HeartRateScreen(navController: NavHostController, viewModel: HomeViewModel =
                                 .padding(end = 10.dp)
                                 .height(350.dp) ,
                             axisFormatter = bottomAxisValueFormatterMonth,
-                            bpmData = bpmPerMonth
+                            bpmData = bpmPerMonth,
+                            markerText = markerText
                         )
                     }
                     Row(modifier = Modifier
@@ -265,7 +269,8 @@ fun HeartRateList(heartRateDataList: List<Triple<String, Float, Float>>) {
 internal fun Chart1(
     modifier: Modifier,
     bpmData: List<Float>, // Parameter to accept BPM data
-    axisFormatter: AxisValueFormatter<AxisPosition.Horizontal.Bottom>
+    axisFormatter: AxisValueFormatter<AxisPosition.Horizontal.Bottom>,
+    markerText: String
 ) {
     val modelProducer = remember { CartesianChartModelProducer.build() }
 
@@ -281,15 +286,27 @@ internal fun Chart1(
             }
         }
     }
-    ComposeChart1(modelProducer, modifier, axisFormatter)
+    ComposeChart1(modelProducer, modifier, axisFormatter, bpmData, markerText)
 }
 @Composable
 private fun ComposeChart1(
     modelProducer: CartesianChartModelProducer,
     modifier: Modifier,
-    axisFormatter: AxisValueFormatter<AxisPosition.Horizontal.Bottom>
+    axisFormatter: AxisValueFormatter<AxisPosition.Horizontal.Bottom>,
+    bpmData: List<Float>, // Parameter to accept BPM data
+    markerText: String
 ) {
-    val marker = rememberMarker()
+    val marker = rememberMarker(data = bpmData, markerText = markerText)
+    val isBPMData = markerText.contains("BPM", ignoreCase = true)
+    val startAxisH =if(isBPMData){
+        AxisValueFormatter<AxisPosition.Vertical.Start> { value, _, _ ->
+            "${value.toInt()}bpm"
+        }
+    }else {
+        AxisValueFormatter<AxisPosition.Vertical.Start> { value, _, _ ->
+            "${value.toInt()}"
+        }
+    }
     CartesianChartHost(
         chart =
         rememberCartesianChart(
@@ -305,7 +322,8 @@ private fun ComposeChart1(
             startAxis = rememberStartAxis(
                 label = rememberAxisLabelComponent(Color.White),
                 axis = rememberAxisLineComponent(Color.White),
-                guideline = rememberAxisGuidelineComponent(Color.White)
+                guideline = rememberAxisGuidelineComponent(Color.White),
+                valueFormatter = startAxisH
             ),
             bottomAxis = rememberBottomAxis(
                 label = rememberAxisLabelComponent(Color.White),

@@ -39,7 +39,6 @@ import com.example.bakis.composables.CustomBottomNavigationBar
 import com.example.bakis.composables.CustomTopAppBar
 import com.example.bakis.composables.StepProgressBar
 import com.example.bakis.composables.WaterIntakeTracker
-import com.example.bakis.rememberMarker
 import com.example.bakis.viewmodel.HomeViewModel
 import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
 import com.patrykandpatrick.vico.compose.axis.rememberAxisGuidelineComponent
@@ -82,18 +81,15 @@ fun calculateMonths(): List<String> {
     }.reversed()
 }
 
-// Use the new function names here
 val daysOfWeek = calculateWeekDays()
 private val bottomAxisValueFormatter =
     AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->
-        // Use daysOfWeek to get the label for each x value
         daysOfWeek[x.toInt() % daysOfWeek.size]
     }
 
 val months = calculateMonths()
 private val bottomAxisValueFormatterMonth =
     AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->
-        // Use months to get the label for each x value
         months[x.toInt() % months.size]
     }
 
@@ -108,6 +104,8 @@ fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hilt
     val stepsPerMonth by viewModel.monthlyStepCounts.collectAsState()
     val averageStepsDay = stepsPerDay.filter { it > 0 }.average()
     val averageStepsMonthBox = stepsPerMonth.filter { it > 0 }.average()
+
+    val markerText = "Average Steps:"
 
     Scaffold(
         topBar = {
@@ -168,7 +166,8 @@ fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hilt
                             stepData = stepsPerDayFloats,
                             axisFormatter = bottomAxisValueFormatter,
                             scrollState = false,
-                            color = 0xffff5500
+                            color = 0xffff5500,
+                            markerText = "Steps:"
                         )
                     }
                     if(selectedLabel.value == "Month") {
@@ -179,7 +178,8 @@ fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hilt
                             stepData = stepsPerMonth,
                             axisFormatter = bottomAxisValueFormatterMonth,
                             scrollState = true,
-                            color = 0xffff5500
+                            color = 0xffff5500,
+                            markerText = markerText
                         )
                     }
                     Row(modifier = Modifier
@@ -245,6 +245,10 @@ fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hil
     val sleepPerDayHours = sleepPerDayFloats.map { it / 60 }
     val sleepPerMonthHours = sleepPerMonthMin.map { it.toFloat() / 60 }
 
+
+
+    val markerText = "Average Sleep:"
+
     Scaffold(
         topBar = {
             CustomTopAppBar(
@@ -300,10 +304,11 @@ fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hil
                             modifier = Modifier
                                 .padding(end = 10.dp)
                                 .height(350.dp),
-                            stepData = sleepPerDayFloats,
+                            stepData = sleepPerDayHours,
                             axisFormatter = bottomAxisValueFormatter,
                             scrollState = false,
-                            color = 0xFF09bfe8
+                            color = 0xFF09bfe8,
+                            markerText = "Sleep:"
                         )
                     }
                     if(selectedLabel.value == "Month") {
@@ -311,10 +316,11 @@ fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hil
                             modifier = Modifier
                                 .padding(end = 10.dp)
                                 .height(350.dp),
-                            stepData = sleepPerMonthMin,
+                            stepData = sleepPerMonthHours,
                             axisFormatter = bottomAxisValueFormatterMonth,
                             scrollState = true,
-                            color = 0xFF09bfe8
+                            color = 0xFF09bfe8,
+                            markerText = markerText
                         )
                     }
                     Row(modifier = Modifier
@@ -371,7 +377,7 @@ fun CaloriesScreen(navController: NavHostController, viewModel: HomeViewModel = 
     // Determine if data is still loading
     val isLoading = remember { mutableStateOf(true) }
     val isInitialLoad = remember { mutableStateOf(true) }
-
+    val markerText = "Average Calories Burned:"
 
 
     LaunchedEffect(caloriesPerDayMin, caloriesPerMonthMin) {
@@ -414,7 +420,7 @@ fun CaloriesScreen(navController: NavHostController, viewModel: HomeViewModel = 
                 .fillMaxSize()
                 .fillMaxWidth()
                 .background(Color(0xFF262626)) // Set the background color here
-                .padding(top = 40.dp, start = 10.dp)
+                .padding( start = 10.dp)
                 .padding(paddingValues) // Apply the padding here
         ) {
             item {
@@ -431,14 +437,14 @@ fun CaloriesScreen(navController: NavHostController, viewModel: HomeViewModel = 
                     ) {
                         if (selectedLabel.value == "Week") {
                             Text(
-                                text = "Average Calories: ${averageCaloriesDay.toInt()}",
+                                text = "Average Calories Burned: ${averageCaloriesDay.toInt()}",
                                 color = Color.White,
                                 fontSize = 22.sp,
                                 modifier = Modifier.padding(10.dp)
                             )
                         } else {
                             Text(
-                                text = "Average Calories: ${averageCaloriesMonth.toInt()}",
+                                text = "Average Calories Burned: ${averageCaloriesMonth.toInt()}",
                                 color = Color.White,
                                 fontSize = 22.sp,
                                 modifier = Modifier.padding(10.dp)
@@ -453,7 +459,8 @@ fun CaloriesScreen(navController: NavHostController, viewModel: HomeViewModel = 
                             stepData = caloriesPerDayMin,
                             axisFormatter = bottomAxisValueFormatter,
                             scrollState = false,
-                            color = 0xFFf52749
+                            color = 0xFFf52749,
+                            markerText = "Calories Burned:"
                         )
                     }
                     if(selectedLabel.value == "Month") {
@@ -464,7 +471,8 @@ fun CaloriesScreen(navController: NavHostController, viewModel: HomeViewModel = 
                             stepData = caloriesPerMonthMin,
                             axisFormatter = bottomAxisValueFormatterMonth,
                             scrollState = true,
-                            color = 0xFFf52749
+                            color = 0xFFf52749,
+                            markerText = markerText
                         )
                     }
                     Row(modifier = Modifier
@@ -512,6 +520,8 @@ fun CaloriesScreen(navController: NavHostController, viewModel: HomeViewModel = 
 }}
 @Composable
 fun WaterIntakeScreen(navController: NavHostController, viewModel: HomeViewModel = hiltViewModel()) {
+
+    val markerText = "Average Water Intake:"
 
     val userId by viewModel.userId.collectAsState()
     val dailyWaterIntakeTotals = viewModel.getDailyWaterIntakeTotalsForUser(userId)
@@ -609,7 +619,8 @@ fun WaterIntakeScreen(navController: NavHostController, viewModel: HomeViewModel
                             stepData = waterPerDayMin,
                             axisFormatter = bottomAxisValueFormatter,
                             scrollState = false,
-                            color = 0xFF1c37ff
+                            color = 0xFF1c37ff,
+                            markerText = "Water Intake:"
                         )
                     }
                     if(selectedLabel.value == "Month") {
@@ -621,7 +632,8 @@ fun WaterIntakeScreen(navController: NavHostController, viewModel: HomeViewModel
                             stepData = waterPerMonthMin,
                             axisFormatter = bottomAxisValueFormatterMonth,
                             scrollState = true,
-                            color = 0xFF1c37ff
+                            color = 0xFF1c37ff,
+                            markerText = markerText
                         )
                     }
                     Row(modifier = Modifier
@@ -662,7 +674,8 @@ internal fun Chart2(
     stepData: List<Float>,
     axisFormatter: AxisValueFormatter<AxisPosition.Horizontal.Bottom>,
     scrollState: Boolean,
-    color: Long
+    color: Long,
+    markerText: String
 ) {
     val modelProducer = remember { CartesianChartModelProducer.build() }
 
@@ -675,7 +688,7 @@ internal fun Chart2(
             }
         }
     }
-    ComposeChart2(modelProducer, modifier, axisFormatter, scrollState, color)
+    ComposeChart2(modelProducer, modifier, axisFormatter, scrollState, color, stepData, markerText)
 }
 
 @Composable
@@ -684,8 +697,28 @@ private fun ComposeChart2(
     modifier: Modifier,
     axisFormatter: AxisValueFormatter<AxisPosition.Horizontal.Bottom>,
     scrollState: Boolean,
-    color: Long
+    color: Long,
+    stepData: List<Float>,
+    markerText: String
 ) {
+    val isSleepData = markerText.contains("sleep", ignoreCase = true)
+    val isBPMData = markerText.contains("BPM", ignoreCase = true)
+    val itemPlacer = if (isSleepData) {
+        remember { AxisItemPlacer.Vertical.step({ _ -> 1f }, false) }
+    } else {
+        remember { AxisItemPlacer.Vertical.step() }
+    }
+    val startAxisH = if(isSleepData) {
+            AxisValueFormatter<AxisPosition.Vertical.Start> { value, _, _ ->
+                "${value.toInt()}h"
+            }
+    }
+    else {
+        AxisValueFormatter<AxisPosition.Vertical.Start> { value, _, _ ->
+            "${value.toInt()}"
+        }
+    }
+
     CartesianChartHost(
         scrollState = rememberVicoScrollState(scrollEnabled = scrollState),
         chart =
@@ -702,7 +735,9 @@ private fun ComposeChart2(
             startAxis = rememberStartAxis(
                 label = rememberAxisLabelComponent(Color.White),
                 axis = rememberAxisLineComponent(Color.White),
-                guideline = rememberAxisGuidelineComponent(Color.White)
+                guideline = rememberAxisGuidelineComponent(Color.White),
+                itemPlacer = itemPlacer,
+                valueFormatter = startAxisH
             ),
             bottomAxis =
             rememberBottomAxis(
@@ -717,40 +752,7 @@ private fun ComposeChart2(
         ),
         modelProducer = modelProducer,
         modifier = modifier,
-        marker = rememberMarker(),
+        marker = rememberMarker(data = stepData, markerText = markerText),
         horizontalLayout = HorizontalLayout.fullWidth(),
     )
 }
-/*
-@Composable
-private fun rememberComposeThresholdLine(
-    thresholdLineForDisplay: Boolean
-): ThresholdLine {
-    val color = Color(THRESHOLD_LINE_COLOR)
-    val line = rememberShapeComponent(color = color)
-    val label =
-        rememberTextComponent(
-            background = rememberShapeComponent(Shapes.pillShape, color),
-            padding =
-            dimensionsOf(
-                THRESHOLD_LINE_LABEL_HORIZONTAL_PADDING_DP.dp,
-                THRESHOLD_LINE_LABEL_VERTICAL_PADDING_DP.dp,
-            ),
-            margins = dimensionsOf(THRESHOLD_LINE_LABEL_MARGIN_DP.dp),
-            typeface = Typeface.MONOSPACE,
-        )
-    return remember(line, label) {
-        if (!thresholdLineForDisplay)
-            ThresholdLine(thresholdValue = THRESHOLD_LINE_Y.toFloat(), lineComponent = line, labelComponent = label)
-        else
-            ThresholdLine(thresholdValue = THRESHOLD_LINE_Y1.toFloat(), lineComponent = line, labelComponent = label)
-    }
-}
-private val THRESHOLD_LINE_Y1 = averageStepsMonth
-private val THRESHOLD_LINE_Y = averageStepsDay
-private const val THRESHOLD_LINE_COLOR = -2893786
-private const val THRESHOLD_LINE_LABEL_HORIZONTAL_PADDING_DP = 8f
-private const val THRESHOLD_LINE_LABEL_VERTICAL_PADDING_DP = 2f
-private const val THRESHOLD_LINE_LABEL_MARGIN_DP = 4f
-
-*/
