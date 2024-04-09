@@ -90,8 +90,6 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel(), navController: Na
     val roundedBpmCount = bpmCount.toFloat().roundToInt()
 
     val data = listOf(
-        //InfoData(R.drawable.footsteps, "Steps", "2000", 0xFFFF7518, "stepData"),
-        //InfoData(R.drawable.bed, "Time In Bed", "8hr 35min",0xFF09bfe8,"sleepData"),
         InfoData(R.drawable.heart_beat, "Heart Rate", "$roundedBpmCount bpm",0xFFFF3131,"bpmData"),
         InfoData(R.drawable.glass_water, "Water Intake", "$todaysWaterIntake ml", 0xFF1c37ff,"waterIntakeScreen") ,
         InfoData(R.drawable.bed, "Sleep", "${hours}h ${remainingMinutes}min", 0xFF09bfe8,"sleepData"),

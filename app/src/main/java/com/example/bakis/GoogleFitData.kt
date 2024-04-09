@@ -7,6 +7,9 @@ import com.google.android.gms.fitness.Fitness
 import com.google.android.gms.fitness.data.DataType
 import com.google.android.gms.fitness.request.DataReadRequest
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.fitness.data.DataPoint
+import com.google.android.gms.fitness.data.DataSet
+import com.google.android.gms.fitness.data.DataSource
 import com.google.android.gms.fitness.data.Field
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -62,6 +65,400 @@ class GoogleFitDataHandler(private val context: Context) {
         fun onStepDataReceived(distance: Double, moveMinutes: Double, averageSpeed: Double)
         fun onError(e: Exception)
     }
+    //TODAYS CALORIES EATEN
+    interface TodayCaloriesListener {
+        fun onCaloriesDataReceived(calories: Double)
+        fun onError(e: Exception)
+    }
+
+    fun readTodayCaloriesData(listener: TodayCaloriesListener) {
+        val startCalendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startTime = startCalendar.timeInMillis
+
+        startCalendar.add(Calendar.DAY_OF_YEAR, 1)
+        val endTime = startCalendar.timeInMillis - 1
+
+        val readRequest = DataReadRequest.Builder()
+            .read(DataType.TYPE_NUTRITION)
+            .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+            .build()
+
+        Fitness.getHistoryClient(context, GoogleSignIn.getLastSignedInAccount(context)!!)
+            .readData(readRequest)
+            .addOnSuccessListener { response ->
+                var totalCalories = 0.0
+                response.dataSets.forEach { dataSet ->
+                    dataSet.dataPoints.forEach { dataPoint ->
+                        val calories = dataPoint.getValue(Field.FIELD_NUTRIENTS).getKeyValue(Field.NUTRIENT_CALORIES)
+                        if (calories != null) {
+                            totalCalories += calories
+                        }
+                    }
+                }
+                listener.onCaloriesDataReceived(totalCalories)
+            }
+            .addOnFailureListener { e ->
+                Log.e("GoogleFitCalories", "There was a problem reading the nutrition data.", e)
+                listener.onError(e)
+            }
+    }
+    fun readPastWeekCaloriesData(listener: CalorieDataListener) {
+        val endCalendar = Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, 1) // Move to the end of today
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val endTime = endCalendar.timeInMillis - 1
+
+        val startCalendar = Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, -6) // Go back 6 days from today
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startTime = startCalendar.timeInMillis
+
+        val dailyCalories = MutableList(7) { 0.0 }
+
+        val readRequest = DataReadRequest.Builder()
+            .aggregate(DataType.TYPE_NUTRITION, DataType.AGGREGATE_NUTRITION_SUMMARY)
+            .bucketByTime(1, TimeUnit.DAYS)
+            .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+            .build()
+
+        Fitness.getHistoryClient(context, GoogleSignIn.getLastSignedInAccount(context)!!)
+            .readData(readRequest)
+            .addOnSuccessListener { response ->
+                response.buckets.forEachIndexed { index, bucket ->
+                    var totalCaloriesForDay = 0.0
+                    bucket.dataSets.forEach { dataSet ->
+                        dataSet.dataPoints.forEach { dataPoint ->
+                            val calories = dataPoint.getValue(Field.FIELD_NUTRIENTS).getKeyValue(Field.NUTRIENT_CALORIES)
+                            calories?.let {
+                                totalCaloriesForDay += it
+                            }
+                        }
+                    }
+                    dailyCalories[index] = totalCaloriesForDay
+                }
+                listener.onCaloriesDataReceived(dailyCalories)
+            }
+            .addOnFailureListener { e ->
+                Log.e("GoogleFitCaloriesWeek", "There was a problem reading the nutrition data for the past week.", e)
+                listener.onError(e)
+            }
+    }
+    interface CalorieDataListener {
+        fun onCaloriesDataReceived(dailyCalories: List<Double>)
+        fun onError(e: Exception)
+    }
+    //Nutrition by month
+    fun readLastTwelveMonthsCaloriesData(listener: CalorieDataListener) {
+        val endCalendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }
+        val endTime = endCalendar.timeInMillis
+
+        val startCalendar = Calendar.getInstance().apply {
+            add(Calendar.MONTH, -11)
+            set(Calendar.DAY_OF_MONTH, 1)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startTime = startCalendar.timeInMillis
+
+        val readRequest = DataReadRequest.Builder()
+            .aggregate(DataType.TYPE_NUTRITION, DataType.AGGREGATE_NUTRITION_SUMMARY)
+            .bucketByTime(1, TimeUnit.DAYS)
+            .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+            .build()
+
+        Fitness.getHistoryClient(context, GoogleSignIn.getLastSignedInAccount(context)!!)
+            .readData(readRequest)
+            .addOnSuccessListener { response ->
+                val dailyCaloriesData = response.buckets.flatMap { bucket ->
+                    bucket.dataSets.flatMap { dataSet ->
+                        dataSet.dataPoints.mapNotNull { dataPoint ->
+                            val calories = dataPoint.getValue(Field.FIELD_NUTRIENTS).getKeyValue(Field.NUTRIENT_CALORIES)
+                            val date = dataPoint.getStartTime(TimeUnit.MILLISECONDS)
+                            calories?.let { Pair(date, it) }
+                        }
+                    }
+                }
+
+                // Aggregate daily data into monthly total data
+                val monthlyTotalData = mutableMapOf<Pair<Int, Int>, Double>()
+
+                dailyCaloriesData.forEach { (date, calories) ->
+                    val cal = Calendar.getInstance().apply { timeInMillis = date }
+                    val yearMonth = Pair(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH))
+                    // Explicitly convert calories to Double and use a lambda for addition
+                    monthlyTotalData.merge(yearMonth, calories.toDouble()) { a, b -> a + b }
+                }
+
+
+                val completeMonthlyData = (0 until 12).map { offset ->
+                    val cal = Calendar.getInstance().apply {
+                        add(Calendar.MONTH, -offset)
+                    }
+                    val yearMonth = Pair(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH))
+                    monthlyTotalData[yearMonth] ?: 0.0
+                }.reversed() // This ensures the current month's data is last
+
+                listener.onCaloriesDataReceived(completeMonthlyData)
+            }
+            .addOnFailureListener { e ->
+                Log.e("GoogleFitMonthsCalories", "There was a problem reading the nutrition data.", e)
+                listener.onError(e)
+            }
+    }
+
+
+
+    //MOVE MINUTES DATA WEEKLY
+    interface MoveMinutesListener{
+        fun onMoveMinutesDataReceived(moveMinutes: List<Int>)
+        fun onError(e: Exception)
+    }
+
+    fun readWeekMoveMinutesData(listener: MoveMinutesListener) {
+        // Calculate the start of the week (7 days ago at 00:00:00.000)
+        val endCalendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }
+        val endTime = endCalendar.timeInMillis
+
+        val startCalendar = Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, -6)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startTime = startCalendar.timeInMillis
+
+        val readRequest = DataReadRequest.Builder()
+            .aggregate(DataType.TYPE_MOVE_MINUTES, DataType.AGGREGATE_MOVE_MINUTES)
+            .bucketByTime(1, TimeUnit.DAYS)
+            .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+            .build()
+
+        Fitness.getHistoryClient(context, GoogleSignIn.getLastSignedInAccount(context)!!)
+            .readData(readRequest)
+            .addOnSuccessListener { response ->
+                val moveMinutes = response.buckets.map { bucket ->
+                    if (bucket.dataSets.isNotEmpty()) {
+                        bucket.dataSets.flatMap { it.dataPoints }.sumOf { it.getValue(Field.FIELD_DURATION).asInt() }
+                    } else {
+                        0
+                    }
+                }
+
+                listener.onMoveMinutesDataReceived(moveMinutes)
+            }
+            .addOnFailureListener { e ->
+                Log.e("GoogleFitWeek", "There was a problem reading the data.", e)
+                listener.onError(e)
+            }
+    }
+    //MOVE MINUTES MONTHS
+    fun readLastTwelveMonthsMoveMinutesData(listener: MoveMinutesListener) {
+        val endCalendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }
+        val endTime = endCalendar.timeInMillis
+
+        val startCalendar = Calendar.getInstance().apply {
+            add(Calendar.MONTH, -11)
+            set(Calendar.DAY_OF_MONTH, 1)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startTime = startCalendar.timeInMillis
+
+        val initialMonthlyData = (0..11).map {
+            val cal = Calendar.getInstance().apply {
+                add(Calendar.MONTH, -it)
+            }
+            Pair(Pair(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH)), 0)
+        }.toMap().toMutableMap()
+
+        val readRequest = DataReadRequest.Builder()
+            .aggregate(DataType.TYPE_MOVE_MINUTES, DataType.AGGREGATE_MOVE_MINUTES)
+            .bucketByTime(1, TimeUnit.DAYS)
+            .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+            .build()
+
+        Fitness.getHistoryClient(context, GoogleSignIn.getLastSignedInAccount(context)!!)
+            .readData(readRequest)
+            .addOnSuccessListener { response ->
+                val dailyMoveMinutes = response.buckets.mapNotNull { bucket ->
+                    val date = bucket.getStartTime(TimeUnit.MILLISECONDS)
+                    bucket.dataSets.flatMap { it.dataPoints }
+                        .sumOf { it.getValue(Field.FIELD_DURATION).asInt() }
+                        .takeIf { it > 0 }?.let { Pair(date, it) }
+                }
+
+                val monthlyData = dailyMoveMinutes.groupBy {
+                    val cal = Calendar.getInstance().apply { timeInMillis = it.first }
+                    Pair(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH))
+                }.mapValues { (_, value) ->
+                    value.sumOf { it.second } / value.size
+                }
+
+                // Update initialMonthlyData with actual data
+                monthlyData.forEach { (key, value) ->
+                    initialMonthlyData[key] = value
+                }
+
+                val sortedMonthlyData = initialMonthlyData.toSortedMap(compareBy({ it.first }, { it.second }))
+                val finalMonthlyAverages = sortedMonthlyData.values.toList()
+
+                listener.onMoveMinutesDataReceived(finalMonthlyAverages)
+            }
+            .addOnFailureListener { e ->
+                Log.e("GoogleFitMonths", "There was a problem reading the data.", e)
+                listener.onError(e)
+            }
+    }
+
+    //DISTANCE DATA WEEK
+    interface DistanceDataListener {
+        fun onDistanceDataReceived(distanceData: List<Float>)
+        fun onError(e: Exception)
+    }
+    fun readWeekDistanceData(listener: DistanceDataListener) {
+        // Calculate the start of the week (7 days ago at 00:00:00.000)
+        val endCalendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }
+        val endTime = endCalendar.timeInMillis
+
+        val startCalendar = Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, -6) // Move back 6 days to cover a total of 7 days including today
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startTime = startCalendar.timeInMillis
+
+        val readRequest = DataReadRequest.Builder()
+            .aggregate(DataType.TYPE_DISTANCE_DELTA, DataType.AGGREGATE_DISTANCE_DELTA)
+            .bucketByTime(1, TimeUnit.DAYS)
+            .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+            .build()
+
+        Fitness.getHistoryClient(context, GoogleSignIn.getLastSignedInAccount(context)!!)
+            .readData(readRequest)
+            .addOnSuccessListener { response ->
+                val distanceData = response.buckets.mapNotNull { bucket ->
+                    bucket.dataSets.flatMap { it.dataPoints }
+                        .mapNotNull { it.getValue(Field.FIELD_DISTANCE).asFloat() } // Extract as Float
+                        .firstOrNull() // Take the first or return null if empty
+                }.filterNotNull() // Ensure no null values are included
+
+                listener.onDistanceDataReceived(distanceData)
+            }
+            .addOnFailureListener { e ->
+                Log.e("GoogleFitWeekDistance", "There was a problem reading the distance data.", e)
+                listener.onError(e)
+            }
+    }
+    fun readLastTwelveMonthsDistanceData(listener: DistanceDataListener) {
+        val endCalendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }
+        val endTime = endCalendar.timeInMillis
+
+        val startCalendar = Calendar.getInstance().apply {
+            add(Calendar.MONTH, -11)
+            set(Calendar.DAY_OF_MONTH, 1)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startTime = startCalendar.timeInMillis
+
+        val readRequest = DataReadRequest.Builder()
+            .aggregate(DataType.TYPE_DISTANCE_DELTA, DataType.AGGREGATE_DISTANCE_DELTA)
+            .bucketByTime(1, TimeUnit.DAYS)
+            .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+            .build()
+
+        Fitness.getHistoryClient(context, GoogleSignIn.getLastSignedInAccount(context)!!)
+            .readData(readRequest)
+            .addOnSuccessListener { response ->
+                val dailyDistanceData = response.buckets.flatMap { bucket ->
+                    bucket.dataSets.flatMap { dataSet ->
+                        dataSet.dataPoints.mapNotNull { dataPoint ->
+                            dataPoint.getValue(Field.FIELD_DISTANCE).asFloat().takeIf { it > 0 }?.let { distance ->
+                                val date = dataPoint.getStartTime(TimeUnit.MILLISECONDS)
+                                Pair(date, distance)
+                            }
+                        }
+                    }
+                }
+
+                // Aggregate daily data into monthly average data
+                val monthlyAverageData = mutableMapOf<Pair<Int, Int>, MutableList<Float>>()
+
+                dailyDistanceData.forEach { (date, distance) ->
+                    val cal = Calendar.getInstance().apply { timeInMillis = date }
+                    val yearMonth = Pair(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH))
+                    monthlyAverageData.getOrPut(yearMonth) { mutableListOf() }.add(distance)
+                }
+
+                val completeMonthlyData = (0 until 12).map { offset ->
+                    val cal = Calendar.getInstance().apply {
+                        add(Calendar.MONTH, -offset)
+                    }
+                    val yearMonth = Pair(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH))
+                    val distances = monthlyAverageData[yearMonth]
+                    if (distances != null && distances.isNotEmpty()) {
+                        distances.average().toFloat()
+                    } else {
+                        0f
+                    }
+                }.reversed() // This makes sure the current month's data is last
+
+                listener.onDistanceDataReceived(completeMonthlyData)
+            }
+            .addOnFailureListener { e ->
+                Log.e("GoogleFitMonthsDistance", "There was a problem reading the distance data.", e)
+                listener.onError(e)
+            }
+    }
+
+
 
 
     //Functions for retrieving Today's data steps, bpm, sleep, calories. Currently only used in home screen to show today's health data.
@@ -101,6 +498,9 @@ class GoogleFitDataHandler(private val context: Context) {
                 listener.onError(e)
             }
     }
+
+
+
     interface SleepDataListener {
         fun onSleepDataReceived(totalSleepMinutes: Int)
         fun onError(e: Exception)
@@ -220,6 +620,175 @@ class GoogleFitDataHandler(private val context: Context) {
                 listener.onError(e)
             }
     }
+    //resting bpm today
+    fun readRestingHeartRateData(listener: HeartRateDataListener) {
+        val startCalendar = Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, -1) // Move to yesterday
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startTime = startCalendar.timeInMillis
+        startCalendar.add(Calendar.DAY_OF_YEAR, 1)
+        val endTime = startCalendar.timeInMillis - 1
+
+        val dataSource = DataSource.Builder()
+            .setType(DataSource.TYPE_DERIVED)
+            .setDataType(DataType.TYPE_HEART_RATE_BPM)
+            .setAppPackageName("com.google.android.gms")
+            .setStreamName("resting_heart_rate<-merge_heart_rate_bpm")
+            .build()
+
+        val readRequest = DataReadRequest.Builder()
+            .aggregate(dataSource)
+            .bucketByTime(1, TimeUnit.DAYS)
+            .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+            .build()
+
+        Fitness.getHistoryClient(context, GoogleSignIn.getLastSignedInAccount(context)!!)
+            .readData(readRequest)
+            .addOnSuccessListener { response ->
+                var totalRestingHeartRate = 0.0
+                var dataPointsCount = 0
+
+                response.buckets.flatMap { it.dataSets }.flatMap { it.dataPoints }.forEach { dataPoint ->
+                    val heartRate = dataPoint.getValue(Field.FIELD_AVERAGE).asFloat()
+                    totalRestingHeartRate += heartRate
+                    dataPointsCount++
+                }
+
+                val restingHeartRateAverage = if (dataPointsCount > 0) totalRestingHeartRate / dataPointsCount else 0.0
+
+                // Callback or handle the single resting BPM value
+                listener.onHeartRateDataReceived(restingHeartRateAverage.toFloat())
+                Toast.makeText(context, "G-FIT Resting Heart Rate: $restingHeartRateAverage bpm", Toast.LENGTH_LONG).show()
+            }
+            .addOnFailureListener { e ->
+                Log.e("GoogleFitRestingHeartRate", "There was a problem reading the resting heart rate data.", e)
+                listener.onError(e)
+            }
+    }
+    //resting bpm WEEK
+    fun readWeekRestingHeartRateData(listener: HeartRateDataWeekListener) {
+        // Calculate start of the week (7 days ago at 00:00:00.000)
+        val endCalendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }
+        val endTime = endCalendar.timeInMillis
+
+        val startCalendar = Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, -6) // Move back 6 days to cover a total of 7 days including today
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startTime = startCalendar.timeInMillis
+
+        val dataSource = DataSource.Builder()
+            .setType(DataSource.TYPE_DERIVED)
+            .setDataType(DataType.TYPE_HEART_RATE_BPM)
+            .setAppPackageName("com.google.android.gms")
+            .setStreamName("resting_heart_rate<-merge_heart_rate_bpm")
+            .build()
+
+        val readRequest = DataReadRequest.Builder()
+            .aggregate(dataSource)
+            .bucketByTime(1, TimeUnit.DAYS)
+            .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+            .build()
+
+        Fitness.getHistoryClient(context, GoogleSignIn.getLastSignedInAccount(context)!!)
+            .readData(readRequest)
+            .addOnSuccessListener { response ->
+                val heartRateCounts = mutableListOf<Float>()
+
+                for (i in 1..7) {
+                    heartRateCounts.add(0.0f)
+                }
+
+                response.buckets.forEachIndexed { index, bucket ->
+                    val dataSet = bucket.dataSets.firstOrNull()
+                    if (dataSet != null && dataSet.dataPoints.isNotEmpty()) {
+                        val averageRestingHeartRate = dataSet.dataPoints.map { it.getValue(Field.FIELD_AVERAGE).asFloat() }.average().toFloat()
+                        heartRateCounts[index] = averageRestingHeartRate
+                    }
+                }
+
+                listener.onHeartRateDataReceived(heartRateCounts)
+            }
+            .addOnFailureListener { e ->
+                Log.e("GoogleFitRestingHeartRateWeek", "There was a problem reading the data.", e)
+                listener.onError(e)
+            }
+    }
+    //resting bpm MONTH
+    fun readMonthlyAverageRestingHeartRate(listener: HeartRateDataMonthListener) {
+        val endCalendar = Calendar.getInstance()
+        val endTime = endCalendar.timeInMillis
+
+        val startCalendar = Calendar.getInstance().apply {
+            add(Calendar.YEAR, -1)
+            add(Calendar.MONTH, +1)
+            set(Calendar.DAY_OF_MONTH, 1)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startTime = startCalendar.timeInMillis
+
+        val dataSource = DataSource.Builder()
+            .setType(DataSource.TYPE_DERIVED)
+            .setDataType(DataType.TYPE_HEART_RATE_BPM)
+            .setAppPackageName("com.google.android.gms")
+            .setStreamName("resting_heart_rate<-merge_heart_rate_bpm")
+            .build()
+
+        val readRequest = DataReadRequest.Builder()
+            .aggregate(dataSource)
+            .bucketByTime(1, TimeUnit.DAYS)
+            .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
+            .build()
+
+        Fitness.getHistoryClient(context, GoogleSignIn.getLastSignedInAccount(context)!!)
+            .readData(readRequest)
+            .addOnSuccessListener { response ->
+                val monthlyHeartRates = mutableMapOf<String, Float>()
+
+                // Initialize every month with 0f to ensure all months are represented even if no data exists
+                val tempCalendar = Calendar.getInstance().apply { timeInMillis = startTime }
+                while (tempCalendar.before(endCalendar) || tempCalendar == endCalendar) {
+                    val monthKey = SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(tempCalendar.time)
+                    monthlyHeartRates[monthKey] = 0f // Pre-fill with zeroes
+                    tempCalendar.add(Calendar.MONTH, 1)
+                }
+
+                response.buckets.flatMap { it.dataSets }.flatMap { it.dataPoints }.forEach { dataPoint ->
+                    val date = Date(dataPoint.getStartTime(TimeUnit.MILLISECONDS))
+                    val monthKey = SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(date)
+                    val heartRate = dataPoint.getValue(Field.FIELD_AVERAGE).asFloat()
+
+                    // Update only if there's a heart rate value greater than 0
+                    if (heartRate > 0) {
+                        val currentAverage = monthlyHeartRates[monthKey] ?: 0f
+                        val currentCount = if (currentAverage > 0) 1 else 0 // Assume each month's data starts with count 1 if average is already set
+                        monthlyHeartRates[monthKey] = (currentAverage * currentCount + heartRate) / (currentCount + 1)
+                    }
+                }
+
+                listener.onHeartRateDataReceived(monthlyHeartRates)
+            }
+            .addOnFailureListener { e ->
+                Log.e("GoogleFitMonthlyRestingHR", "There was a problem reading the data.", e)
+                listener.onError(e)
+            }
+    }
+
 
     //week days steps
     interface StepDataWeekListener {
@@ -798,15 +1367,42 @@ class GoogleFitDataHandler(private val context: Context) {
             }
     }
 
+    //DATA INSERTION
 
 
 
+}
+fun addCaloriesToGoogleFit(context: Context, calories: Float, startTime: Long, endTime: Long) {
+    val dataSource = DataSource.Builder()
+        .setAppPackageName(context)
+        .setDataType(DataType.TYPE_NUTRITION)
+        .setType(DataSource.TYPE_RAW)
+        .build()
 
+    // Since Field.NUTRIENTS expects a Map, we prepare the calories in the correct format.
+    val nutrientsMap = mapOf(Field.NUTRIENT_CALORIES to calories)
 
+    // Create the data point with specific start and end times
+    val dataPoint = DataPoint.builder(dataSource)
+        .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
+        .setField(Field.FIELD_NUTRIENTS, nutrientsMap)
+        .build()
 
+    // Create the data set
+    val dataSet = DataSet.builder(dataSource)
+        .add(dataPoint)
+        .build()
 
-
-
-
+    // Insert the data set into Google Fit
+    Fitness.getHistoryClient(context, GoogleSignIn.getLastSignedInAccount(context)!!)
+        .insertData(dataSet)
+        .addOnSuccessListener {
+            // Data insert was successful
+            Log.i("GoogleFitCalories", "Successfully added calories to Google Fit.")
+        }
+        .addOnFailureListener { e ->
+            // Handle failure
+            Log.e("GoogleFitCalories", "Failed to add calories to Google Fit.", e)
+        }
 }
 

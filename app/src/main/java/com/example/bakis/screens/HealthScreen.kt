@@ -52,9 +52,9 @@ fun HealthScreen(navController: NavHostController, onNavigate: (String) -> Unit)
     val items = listOf("Dashboard", "Health", "Me")
     val icons = listOf(Icons.Default.Home, Icons.Default.Favorite, Icons.Default.Person)
     val data = listOf(
-        HealthScreenData(R.drawable.heartratezones,"Heart Rate Zones", 0xFFFF7518, 0xFFFF3131, "heartRateZones"),
-        HealthScreenData(R.drawable.exercise,"Exercise Tracking", 0xFFC492E6, 0xFF8A2BE2, "exerciseTracking"),
-        HealthScreenData(R.drawable.stress,"Stress Management", 0xFF0A0F44, 0xFF00C1D0, "stressManagement"),
+        HealthScreenData(R.drawable.heartratezones,"Heart Rate Vitals", 0xFFFF7518, 0xFFFF3131, "heartRateZones"),
+        HealthScreenData(R.drawable.exercise,"Activity Tracking", 0xFFC492E6, 0xFF8A2BE2, "exerciseTracking"),
+        //HealthScreenData(R.drawable.stress,"Stress Management", 0xFF0A0F44, 0xFF00C1D0, "stressManagement"),
         HealthScreenData(R.drawable.nutrition,"Nutritional Tracking", 0xFFD147AB, 0xFFF8BBD0, "nutritionalTracking")
     )
         Scaffold(

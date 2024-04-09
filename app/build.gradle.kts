@@ -105,7 +105,7 @@ dependencies {
 
     //Google Fit
     implementation("com.google.android.gms:play-services-fitness:21.1.0")
-    implementation("com.google.android.gms:play-services-auth:20.5.0")
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
 
 
 }

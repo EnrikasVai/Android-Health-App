@@ -106,7 +106,6 @@ fun HeartRateScreen(navController: NavHostController, viewModel: HomeViewModel =
                 onEditClick = { /* ... */ },
                 showEditIcon = false,
                 showBackButton = true,
-                onBackClick = {navController.navigate("home")}
             )
         },
         bottomBar = {
@@ -232,6 +231,149 @@ fun HeartRateScreen(navController: NavHostController, viewModel: HomeViewModel =
                 }
                 Spacer(modifier = Modifier.height(30.dp))
                 HeartRateList(heartRateDataList = heartRateDataList)
+            }
+        }
+    }
+}
+@Composable
+fun HeartRateRestingScreen(navController: NavHostController, viewModel: HomeViewModel = hiltViewModel()) {
+    val today = LocalDate.now()
+
+    // Updated logic for rotating the daysOfWeek2 and months2 lists
+    val daysOfWeek2 = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    val currentDayOfWeek = today.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.US)
+    val currentDayIndex = (daysOfWeek2.indexOf(currentDayOfWeek) + 1) % daysOfWeek2.size
+    val rotatedDaysOfWeek = (daysOfWeek2 + daysOfWeek2).slice(currentDayIndex until currentDayIndex + daysOfWeek2.size)
+    val months2 = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+    val currentMonth = today.month.getDisplayName(TextStyle.SHORT, Locale.US)
+    val currentMonthIndex = (months2.indexOf(currentMonth) + 1) % months2.size
+    val rotatedMonths = (months2 + months2).slice(currentMonthIndex until currentMonthIndex + months2.size)
+
+    val bottomAxisValueFormatter = AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->
+        rotatedDaysOfWeek[(x % rotatedDaysOfWeek.size).toInt()]
+    }
+
+    val bottomAxisValueFormatterMonth = AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->
+        rotatedMonths[(x % rotatedMonths.size).toInt()]
+    }
+
+    //data example
+    val bpmRestingWeek by viewModel.weeklyHeartRateCountsResting.collectAsState()
+    val bpmPerMonthResting by viewModel.monthlyHeartRateCountsResting.collectAsState()
+    val averageBpmDay = bpmRestingWeek.filter { it > 0 }.average()
+    val averageBpmMonth = bpmPerMonthResting.filter { it > 0 }.average()
+
+    val markerText = "Average BPM:"
+    Scaffold(
+        topBar = {
+            CustomTopAppBar(
+                title = "Heart Rate Resting",
+                onEditClick = { /* ... */ },
+                showEditIcon = false,
+                showBackButton = true,
+            )
+        },
+        bottomBar = {
+            CustomBottomNavigationBar(
+                navController = navController,
+                items = listOf("Dashboard", "Health", "Me"),
+                icons = listOf(Icons.Default.Home, Icons.Default.Favorite, Icons.Default.Person)
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .fillMaxWidth()
+                .background(Color(0xFF262626))
+                .padding(start = 10.dp)
+                .padding(paddingValues)
+        ) {
+            item {
+                val labels = listOf("Week", "Month")
+                val selectedLabel = remember { mutableStateOf("Week") }
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 30.dp)
+                ) {
+                    Box(modifier = Modifier
+                        .padding(10.dp)
+                        .background(color = Color.DarkGray, shape = RoundedCornerShape(10.dp))
+                    ) {
+                        if(selectedLabel.value == "Week")
+                            Text(
+                                text="Average Resting BPM: ${averageBpmDay.toInt()}",
+                                color = Color.White,
+                                fontSize = 22.sp,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        else
+                            Text(
+                                text="Average Resting BPM: ${averageBpmMonth.toInt()}",
+                                color = Color.White,
+                                fontSize = 22.sp,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                    }
+                    if(selectedLabel.value == "Week") {
+                        Chart1(
+                            modifier = Modifier
+                                .padding(end = 10.dp)
+                                .height(350.dp),
+                            bpmData = bpmRestingWeek,
+                            axisFormatter = bottomAxisValueFormatter,
+                            markerText = markerText
+                        )
+                    }
+                    if(selectedLabel.value == "Month") {
+                        Chart1(
+                            modifier = Modifier
+                                .padding(end = 10.dp)
+                                .height(350.dp) ,
+                            axisFormatter = bottomAxisValueFormatterMonth,
+                            bpmData = bpmPerMonthResting,
+                            markerText = markerText
+                        )
+                    }
+                    Row(modifier = Modifier
+                        .padding(top = 20.dp, end = 10.dp)
+                        .fillMaxWidth()
+                        .padding(start = 15.dp, end = 15.dp)) {
+                        labels.forEachIndexed { index, label ->
+                            val shape = when (index) {
+                                0 -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
+                                labels.lastIndex -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
+                                else -> RectangleShape
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .background(
+                                        if (label == selectedLabel.value) Color(0xFFFF3131) else Color.DarkGray,
+                                        shape = shape
+                                    )
+                                    .clickable { selectedLabel.value = label }
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = label, color = Color.White)
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row (modifier = Modifier.align(Alignment.CenterHorizontally)){
+                        Box(modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 10.dp, end = 20.dp)) {
+                            Text("Resting heart rate is measured in beats per minute, and can be useful way to gauge your overall health and fitness",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Justify
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(30.dp))
             }
         }
     }

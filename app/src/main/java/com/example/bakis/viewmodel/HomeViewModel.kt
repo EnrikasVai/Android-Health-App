@@ -11,7 +11,6 @@ import com.example.bakis.database.UserEntity
 import com.example.bakis.database.WaterIntakeEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +30,6 @@ class HomeViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
-
     private val _stepCount = MutableStateFlow("0")
     val stepCount = _stepCount.asStateFlow()
     private val _sleepCount = MutableStateFlow("0")
@@ -40,13 +38,21 @@ class HomeViewModel @Inject constructor(
     val calCount = _calCount.asStateFlow()
     private val _bpmCount = MutableStateFlow("0")
     val bpmCount = _bpmCount.asStateFlow()
+    private val _bpmCountResting = MutableStateFlow("0")
+    val bpmCountResting = _bpmCountResting.asStateFlow()
     private val _todayDistance = MutableStateFlow(0.0)
     val todayDistance = _todayDistance.asStateFlow()
     private val _todayMoveMinutes = MutableStateFlow(0.0)
     val todayMoveMinutes = _todayMoveMinutes.asStateFlow()
     private val _todayAverageSpeed = MutableStateFlow(0.0)
     val todayAverageSpeed = _todayAverageSpeed.asStateFlow()
+    private val _todayCalories = MutableStateFlow(0.0)
+    val todayCalories = _todayCalories.asStateFlow()
 
+    private val _weeklyNutritionCounts = MutableStateFlow<List<Double>>(emptyList())
+    val weeklyNutritionCounts = _weeklyNutritionCounts.asStateFlow()
+    private val _monthlyNutritionCounts = MutableStateFlow<List<Double>>(emptyList())
+    val monthlyNutritionCounts = _monthlyNutritionCounts.asStateFlow()
 
     private val _weeklyStepCounts = MutableStateFlow<List<Int>>(emptyList())
     val weeklyStepCounts = _weeklyStepCounts.asStateFlow()
@@ -71,6 +77,24 @@ class HomeViewModel @Inject constructor(
     private val _weeklyHeartRateCountsMinMax = MutableStateFlow<List<Triple<String, Float, Float>>>(emptyList())
     val weeklyHeartRateCountsMinMax: StateFlow<List<Triple<String, Float, Float>>> = _weeklyHeartRateCountsMinMax.asStateFlow()
 
+    private val _weeklyMoveMinutes = MutableStateFlow<List<Int>>(emptyList())
+    val weeklyMoveMinutes: StateFlow<List<Int>> = _weeklyMoveMinutes.asStateFlow()
+    private val _monthlyMoveMinutes = MutableStateFlow<List<Int>>(emptyList())
+    val monthlyMoveMinutes: StateFlow<List<Int>> = _monthlyMoveMinutes.asStateFlow()
+
+    private val _weeklyDistance = MutableStateFlow<List<Float>>(emptyList())
+    val weeklyDistance: StateFlow<List<Float>> = _weeklyDistance.asStateFlow()
+    private val _monthlyDistance = MutableStateFlow<List<Float>>(emptyList())
+    val monthlyDistance: StateFlow<List<Float>> = _monthlyDistance.asStateFlow()
+
+    private val _weeklyHeartRateCountsResting = MutableStateFlow<List<Float>>(emptyList())
+    val weeklyHeartRateCountsResting: StateFlow<List<Float>> = _weeklyHeartRateCountsResting.asStateFlow()
+    private val _monthlyHeartRateCountsResting = MutableStateFlow<List<Float>>(emptyList())
+    val monthlyHeartRateCountsResting: StateFlow<List<Float>> = _monthlyHeartRateCountsResting.asStateFlow()
+
+
+
+
     init {
         fetchStepCount()
         fetchSleepCount()
@@ -86,7 +110,107 @@ class HomeViewModel @Inject constructor(
         fetchMonthlyCaloriesCounts()
         fetchWeeklyHeartRateMinMax()
         fetchFitnessData()
+        fetchWeeklyMoveMinutes()
+        fetchWeeklyDistance()
+        fetchMonthlyMoveMinutes()
+        fetchMonthlyDistance()
+        fetchTodaysNutrition()
+        fetchWeeksNutrition()
+        fetchMonthNutrition()
+        fetchBpmCountResting()
+        fetchWeeklyHeartRateCountResting()
+        fetchMonthlyHeartRateCountsResting()
     }
+    fun fetchWeeklyDistance() {
+        val googleFitDataHandler = GoogleFitDataHandler(context)
+        googleFitDataHandler.readWeekDistanceData(object : GoogleFitDataHandler.DistanceDataListener {
+            override fun onDistanceDataReceived(distanceData: List<Float>) {
+                _weeklyDistance.value = distanceData
+            }
+
+            override fun onError(e: Exception) {
+                Log.e("HomeViewModel", "Error fetching weekly distance", e)
+            }
+        })
+    }
+    fun fetchMonthlyDistance() {
+        val googleFitDataHandler = GoogleFitDataHandler(context)
+        googleFitDataHandler.readLastTwelveMonthsDistanceData(object : GoogleFitDataHandler.DistanceDataListener {
+            override fun onDistanceDataReceived(distanceData: List<Float>) {
+                _monthlyDistance.value = distanceData
+            }
+
+            override fun onError(e: Exception) {
+                Log.e("HomeViewModel", "Error fetching weekly distance", e)
+            }
+        })
+    }
+
+    fun fetchWeeklyMoveMinutes() {
+        val googleFitDataHandler = GoogleFitDataHandler(context)
+        googleFitDataHandler.readWeekMoveMinutesData(object : GoogleFitDataHandler.MoveMinutesListener {
+            override fun onMoveMinutesDataReceived(moveMinutes: List<Int>) {
+                _weeklyMoveMinutes.value = moveMinutes
+            }
+
+            override fun onError(e: Exception) {
+                Log.e("HomeViewModel", "Error fetching weekly move minutes", e)
+            }
+        })
+    }
+    fun fetchMonthlyMoveMinutes() {
+        val googleFitDataHandler = GoogleFitDataHandler(context)
+        googleFitDataHandler.readLastTwelveMonthsMoveMinutesData(object : GoogleFitDataHandler.MoveMinutesListener {
+            override fun onMoveMinutesDataReceived(moveMinutes: List<Int>) {
+                _monthlyMoveMinutes.value = moveMinutes
+            }
+
+            override fun onError(e: Exception) {
+                Log.e("HomeViewModel", "Error fetching weekly move minutes", e)
+            }
+        })
+    }
+    fun fetchTodaysNutrition() {
+        val googleFitDataHandler = GoogleFitDataHandler(context)
+        googleFitDataHandler.readTodayCaloriesData(object : GoogleFitDataHandler.TodayCaloriesListener {
+            override fun onCaloriesDataReceived(calories: Double) {
+                viewModelScope.launch {
+                    _todayCalories.value = calories
+                }
+            }
+            override fun onError(e: Exception) {
+                Log.e("FitnessViewModel", "Error fetching fitness data", e)
+            }
+        })
+    }
+    fun fetchWeeksNutrition() {
+        val googleFitDataHandler = GoogleFitDataHandler(context)
+        googleFitDataHandler.readPastWeekCaloriesData(object : GoogleFitDataHandler.CalorieDataListener {
+            override fun onCaloriesDataReceived(dailyCalories: List<Double>) {
+                viewModelScope.launch {
+                    _weeklyNutritionCounts.value = dailyCalories
+                }
+            }
+            override fun onError(e: Exception) {
+                Log.e("FitnessViewModel", "Error fetching fitness data", e)
+            }
+        })
+    }
+    fun fetchMonthNutrition() {
+        val googleFitDataHandler = GoogleFitDataHandler(context)
+        googleFitDataHandler.readLastTwelveMonthsCaloriesData(object : GoogleFitDataHandler.CalorieDataListener {
+            override fun onCaloriesDataReceived(dailyCalories: List<Double>) {
+                viewModelScope.launch {
+                    _monthlyNutritionCounts.value = dailyCalories
+                }
+            }
+            override fun onError(e: Exception) {
+                Log.e("FitnessViewModel", "Error fetching fitness data", e)
+            }
+        })
+    }
+
+
     fun fetchFitnessData() {
         val googleFitDataHandler = GoogleFitDataHandler(context)
 
@@ -115,6 +239,17 @@ class HomeViewModel @Inject constructor(
             }
         })
     }
+    fun fetchBpmCountResting() {
+        val googleFitDataHandler = GoogleFitDataHandler(context)
+        googleFitDataHandler.readRestingHeartRateData(object : GoogleFitDataHandler.HeartRateDataListener {
+            override fun onHeartRateDataReceived(bpmCount: Float) {
+                _bpmCountResting.value = bpmCount.toString()
+            }
+            override fun onError(e: Exception) {
+                Log.e("HomeViewModel", "Error fetching step count", e)
+            }
+        })
+    }
     fun fetchStepCount() {
         val googleFitDataHandler = GoogleFitDataHandler(context)
         googleFitDataHandler.readStepData(object : GoogleFitDataHandler.StepDataListener {
@@ -127,6 +262,9 @@ class HomeViewModel @Inject constructor(
             }
         })
     }
+
+
+
 
     fun fetchSleepCount() {
         val googleFitDataHandler = GoogleFitDataHandler(context)
@@ -212,11 +350,35 @@ class HomeViewModel @Inject constructor(
             }
         })
     }
+    fun fetchWeeklyHeartRateCountResting() {
+        val googleFitDataHandler = GoogleFitDataHandler(context)
+        googleFitDataHandler.readWeekRestingHeartRateData(object : GoogleFitDataHandler.HeartRateDataWeekListener {
+            override fun onHeartRateDataReceived(heartRateCounts: List<Float>) {
+                _weeklyHeartRateCountsResting.value = heartRateCounts
+            }
+            override fun onError(e: Exception) {
+                Log.e("HomeViewModel", "Error fetching weekly heart rate data", e)
+            }
+        })
+    }
     fun fetchMonthlyHeartRateCounts() {
         val googleFitDataHandler = GoogleFitDataHandler(context)
         googleFitDataHandler.readAverageHeartRateForPast12Months(object : GoogleFitDataHandler.HeartRateDataMonthListener {
             override fun onHeartRateDataReceived(heartRateCounts: Map<String, Float>) { // Ensure this matches interface
                 _monthlyHeartRateCounts.value = heartRateCounts.values.toList() // This already expects Float, matching the interface
+            }
+
+            override fun onError(e: Exception) {
+                Log.e("ViewModel", "Error fetching monthly step counts", e)
+                // Error handling remains the same
+            }
+        })
+    }
+    fun fetchMonthlyHeartRateCountsResting() {
+        val googleFitDataHandler = GoogleFitDataHandler(context)
+        googleFitDataHandler.readMonthlyAverageRestingHeartRate(object : GoogleFitDataHandler.HeartRateDataMonthListener {
+            override fun onHeartRateDataReceived(heartRateCounts: Map<String, Float>) { // Ensure this matches interface
+                _monthlyHeartRateCountsResting.value = heartRateCounts.values.toList() // This already expects Float, matching the interface
             }
 
             override fun onError(e: Exception) {

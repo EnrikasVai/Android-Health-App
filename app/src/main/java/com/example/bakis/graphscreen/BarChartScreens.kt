@@ -11,13 +11,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,15 +31,20 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.example.bakis.addCaloriesToGoogleFit
 import com.example.bakis.composables.CustomBottomNavigationBar
 import com.example.bakis.composables.CustomTopAppBar
 import com.example.bakis.composables.StepProgressBar
@@ -54,12 +64,17 @@ import com.patrykandpatrick.vico.compose.chart.scroll.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.component.rememberLineComponent
 import com.patrykandpatrick.vico.core.axis.AxisItemPlacer
 import com.patrykandpatrick.vico.core.axis.AxisPosition
+import com.patrykandpatrick.vico.core.axis.BaseAxis
 import com.patrykandpatrick.vico.core.axis.formatter.AxisValueFormatter
 import com.patrykandpatrick.vico.core.chart.layout.HorizontalLayout
 import com.patrykandpatrick.vico.core.component.shape.Shapes
 import com.patrykandpatrick.vico.core.model.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.model.columnSeries
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.lang.String.format
 import java.util.Calendar
 
 
@@ -114,7 +129,6 @@ fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hilt
                 onEditClick = { /* ... */ },
                 showEditIcon = false ,
                 showBackButton = true,
-                onBackClick = {navController.navigate("home")}
             )
         },
         bottomBar = {
@@ -147,7 +161,7 @@ fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hilt
                     ) {
                         if(selectedLabel.value == "Week")
                         Text(
-                            text="Average Steps: ${averageStepsDay.toInt()}",
+                            text="Average Steps: ${String.format("%.0f", averageStepsDay)}",
                             color = Color.White,
                             fontSize = 22.sp,
                             modifier = Modifier.padding(10.dp)
@@ -258,7 +272,6 @@ fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hil
                 onEditClick = { /* ... */ },
                 showEditIcon = false,
                 showBackButton = true,
-                onBackClick = {navController.navigate("home")}
             )
         },
         bottomBar = {
@@ -410,7 +423,6 @@ fun CaloriesScreen(navController: NavHostController, viewModel: HomeViewModel = 
                 onEditClick = { /* ... */ },
                 showEditIcon = false,
                 showBackButton = true,
-                onBackClick = {navController.navigate("home")}
             )
         },
         bottomBar = {
@@ -426,7 +438,7 @@ fun CaloriesScreen(navController: NavHostController, viewModel: HomeViewModel = 
                 .fillMaxSize()
                 .fillMaxWidth()
                 .background(Color(0xFF262626)) // Set the background color here
-                .padding( start = 10.dp)
+                .padding(start = 10.dp)
                 .padding(paddingValues) // Apply the padding here
         ) {
             item {
@@ -581,7 +593,6 @@ fun WaterIntakeScreen(navController: NavHostController, viewModel: HomeViewModel
                 onEditClick = { /* ... */ },
                 showEditIcon = false ,
                 showBackButton = true,
-                onBackClick = {navController.navigate("home")}
             )
         },
         bottomBar = {
@@ -675,7 +686,613 @@ fun WaterIntakeScreen(navController: NavHostController, viewModel: HomeViewModel
     }
     }
 }
+@Composable
+fun MoveMinutesScreen(navController: NavHostController, viewModel: HomeViewModel = hiltViewModel()) {
 
+    //data
+    val moveMinutesWeek: List<Int> by viewModel.weeklyMoveMinutes.collectAsState()
+    val moveMinutesWeekFloats = moveMinutesWeek.map { it.toFloat() }
+    val moveMinutesMonth by viewModel.monthlyMoveMinutes.collectAsState()
+    val moveMinutesMonthFloats = moveMinutesMonth.map { it.toFloat() }
+    val averageMoveMinutesDay = moveMinutesWeek.filter { it > 0 }.average()
+    val averageMoveMinutesMonthBox = moveMinutesMonth.filter { it > 0 }.average()
+
+    val markerText = "Average Move Minutes:"
+
+    Scaffold(
+        topBar = {
+            CustomTopAppBar(
+                title = "Move Minutes Data",
+                onEditClick = { /* ... */ },
+                showEditIcon = false ,
+                showBackButton = true,
+            )
+        },
+        bottomBar = {
+            CustomBottomNavigationBar(
+                navController = navController,
+                items = listOf("Dashboard", "Health", "Me"),
+                icons = listOf(Icons.Default.Home, Icons.Default.Favorite, Icons.Default.Person)
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .fillMaxWidth()
+                .background(Color(0xFF262626))
+                .padding(start = 10.dp)
+                .padding(paddingValues)
+        ) {
+            item {
+                val labels = listOf("Week", "Month")
+                val selectedLabel = remember { mutableStateOf("Week") }
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)
+                ) {
+                    Spacer(modifier = Modifier.height(30.dp))
+                    Box(modifier = Modifier
+                        .background(color = Color.DarkGray, shape = RoundedCornerShape(10.dp))
+                    ) {
+                        if(selectedLabel.value == "Week")
+                            Text(
+                                text="Average Move Minutes: ${String.format("%.0f", averageMoveMinutesDay)}",
+                                color = Color.White,
+                                fontSize = 22.sp,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        else
+                            Text(
+                                text="Average Move Minutes: ${averageMoveMinutesMonthBox.toInt()}",
+                                color = Color.White,
+                                fontSize = 22.sp,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                    }
+                    if(selectedLabel.value == "Week") {
+                        Chart2(
+                            modifier = Modifier
+                                .padding(end = 10.dp)
+                                .height(350.dp),
+                            stepData = moveMinutesWeekFloats,
+                            axisFormatter = bottomAxisValueFormatter,
+                            scrollState = false,
+                            color = 0xffff5500,
+                            markerText = "Move Minutes:"
+                        )
+                    }
+                    if(selectedLabel.value == "Month") {
+                        Chart2(
+                            modifier = Modifier
+                                .padding(end = 10.dp)
+                                .height(350.dp),
+                            stepData = moveMinutesMonthFloats,
+                            axisFormatter = bottomAxisValueFormatterMonth,
+                            scrollState = true,
+                            color = 0xffff5500,
+                            markerText = markerText
+                        )
+                    }
+                    Row(modifier = Modifier
+                        .padding(top = 20.dp, end = 10.dp)
+                        .fillMaxWidth()
+                        .padding(start = 15.dp, end = 15.dp)) {
+                        labels.forEachIndexed { index, label ->
+                            val shape = when (index) {
+                                0 -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
+                                labels.lastIndex -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
+                                else -> RectangleShape
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .background(
+                                        if (label == selectedLabel.value) Color(0xffff5500) else Color.DarkGray,
+                                        shape = shape
+                                    )
+                                    .clickable { selectedLabel.value = label }
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = label, color = Color.White)
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row (modifier = Modifier.align(Alignment.CenterHorizontally)){
+                        Box(modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 10.dp, end = 20.dp)) {
+                            Text("Move Minutes are measured of anything that gets you moving, helping you understand how active you are each day",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Justify
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(50.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DistanceScreen(navController: NavHostController, viewModel: HomeViewModel = hiltViewModel()) {
+
+    //data
+    val distanceWeek by viewModel.weeklyDistance.collectAsState()
+    val distanceMonth by viewModel.monthlyDistance.collectAsState()
+    val averageDistanceDay = distanceWeek.filter { it > 0 }.average()
+    val averageDistanceMonthBox = distanceMonth.filter { it > 0 }.average()
+
+    val markerText = "Average Distance in km:"
+
+    Scaffold(
+        topBar = {
+            CustomTopAppBar(
+                title = "Distance Data",
+                onEditClick = { /* ... */ },
+                showEditIcon = false ,
+                showBackButton = true,
+            )
+        },
+        bottomBar = {
+            CustomBottomNavigationBar(
+                navController = navController,
+                items = listOf("Dashboard", "Health", "Me"),
+                icons = listOf(Icons.Default.Home, Icons.Default.Favorite, Icons.Default.Person)
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .fillMaxWidth()
+                .background(Color(0xFF262626))
+                .padding(start = 10.dp)
+                .padding(paddingValues)
+        ) {
+            item {
+                val labels = listOf("Week", "Month")
+                val selectedLabel = remember { mutableStateOf("Week") }
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)
+                ) {
+                    Spacer(modifier = Modifier.height(30.dp))
+                    Box(modifier = Modifier
+                        .background(color = Color.DarkGray, shape = RoundedCornerShape(10.dp))
+                    ) {
+                        if(selectedLabel.value == "Week")
+                            Text(
+                                text="Average Distance: ${String.format("%.2f", averageDistanceDay/1000)} km",
+                                color = Color.White,
+                                fontSize = 22.sp,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        else
+                            Text(
+                                text="Average Distance: ${String.format("%.2f",averageDistanceMonthBox/1000)} km",
+                                color = Color.White,
+                                fontSize = 22.sp,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                    }
+                    if(selectedLabel.value == "Week") {
+                        Chart2(
+                            modifier = Modifier
+                                .padding(end = 10.dp)
+                                .height(350.dp),
+                            stepData = distanceWeek,
+                            axisFormatter = bottomAxisValueFormatter,
+                            scrollState = false,
+                            color = 0xffff5500,
+                            markerText = "Distance in km:"
+                        )
+                    }
+                    if(selectedLabel.value == "Month") {
+                        Chart2(
+                            modifier = Modifier
+                                .padding(end = 10.dp)
+                                .height(350.dp),
+                            stepData = distanceMonth,
+                            axisFormatter = bottomAxisValueFormatterMonth,
+                            scrollState = true,
+                            color = 0xffff5500,
+                            markerText = markerText
+                        )
+                    }
+                    Row(modifier = Modifier
+                        .padding(top = 20.dp, end = 10.dp)
+                        .fillMaxWidth()
+                        .padding(start = 15.dp, end = 15.dp)) {
+                        labels.forEachIndexed { index, label ->
+                            val shape = when (index) {
+                                0 -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
+                                labels.lastIndex -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
+                                else -> RectangleShape
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .background(
+                                        if (label == selectedLabel.value) Color(0xffff5500) else Color.DarkGray,
+                                        shape = shape
+                                    )
+                                    .clickable { selectedLabel.value = label }
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = label, color = Color.White)
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row (modifier = Modifier.align(Alignment.CenterHorizontally)){
+                        Box(modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 10.dp, end = 20.dp)) {
+                            Text("Measuring your distance is a useful way to track your achievements in activaties like cycling, running or swimming",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Justify
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(50.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SpeedScreen(navController: NavHostController, viewModel: HomeViewModel = hiltViewModel()) {
+
+    //data
+    val distanceWeek by viewModel.weeklyDistance.collectAsState()
+    val distanceMonth by viewModel.monthlyDistance.collectAsState()
+    val moveMinutesWeek: List<Int> by viewModel.weeklyMoveMinutes.collectAsState()
+    val moveMinutesMonth by viewModel.monthlyMoveMinutes.collectAsState()
+
+    val speedWeek = distanceWeek.zip(moveMinutesWeek) { distance, moveMinutes ->
+        if (moveMinutes > 0) (distance / (moveMinutes * 60f)) * 3.6f else 0f
+    }
+    val speedMonth = distanceMonth.zip(moveMinutesMonth) { distance, moveMinutes ->
+        if (moveMinutes > 0) {
+            val speedInKmPerHour = (distance / 1000f) / (moveMinutes / 60f)
+            speedInKmPerHour * 1f
+        } else 0f
+    }
+
+
+    val averageSpeedDay = speedWeek.filter { it > 0 }.average()
+    val averageSpeedMonthBox = speedMonth.filter { it > 0 }.average()
+
+    val markerText = "Average Speed in km/h:"
+
+    Scaffold(
+        topBar = {
+            CustomTopAppBar(
+                title = "Distance Data",
+                onEditClick = { /* ... */ },
+                showEditIcon = false ,
+                showBackButton = true,
+            )
+        },
+        bottomBar = {
+            CustomBottomNavigationBar(
+                navController = navController,
+                items = listOf("Dashboard", "Health", "Me"),
+                icons = listOf(Icons.Default.Home, Icons.Default.Favorite, Icons.Default.Person)
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .fillMaxWidth()
+                .background(Color(0xFF262626))
+                .padding(start = 10.dp)
+                .padding(paddingValues)
+        ) {
+            item {
+                val labels = listOf("Week", "Month")
+                val selectedLabel = remember { mutableStateOf("Week") }
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)
+                ) {
+                    Spacer(modifier = Modifier.height(30.dp))
+                    Box(modifier = Modifier
+                        .background(color = Color.DarkGray, shape = RoundedCornerShape(10.dp))
+                    ) {
+                        if(selectedLabel.value == "Week")
+                            Text(
+                                text="Average Speed: ${String.format("%.2f", averageSpeedDay)} km/h",
+                                color = Color.White,
+                                fontSize = 22.sp,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        else
+                            Text(
+                                text="Average Speed: ${String.format("%.2f",averageSpeedMonthBox)} km/h",
+                                color = Color.White,
+                                fontSize = 22.sp,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                    }
+                    if(selectedLabel.value == "Week") {
+                        Chart2(
+                            modifier = Modifier
+                                .padding(end = 10.dp)
+                                .height(350.dp),
+                            stepData = speedWeek,
+                            axisFormatter = bottomAxisValueFormatter,
+                            scrollState = false,
+                            color = 0xffff5500,
+                            markerText = "Average Speed km/h:"
+                        )
+                    }
+                    if(selectedLabel.value == "Month") {
+                        Chart2(
+                            modifier = Modifier
+                                .padding(end = 10.dp)
+                                .height(350.dp),
+                            stepData = speedMonth,
+                            axisFormatter = bottomAxisValueFormatterMonth,
+                            scrollState = true,
+                            color = 0xffff5500,
+                            markerText = markerText
+                        )
+                    }
+                    Row(modifier = Modifier
+                        .padding(top = 20.dp, end = 10.dp)
+                        .fillMaxWidth()
+                        .padding(start = 15.dp, end = 15.dp)) {
+                        labels.forEachIndexed { index, label ->
+                            val shape = when (index) {
+                                0 -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
+                                labels.lastIndex -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
+                                else -> RectangleShape
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .background(
+                                        if (label == selectedLabel.value) Color(0xffff5500) else Color.DarkGray,
+                                        shape = shape
+                                    )
+                                    .clickable { selectedLabel.value = label }
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = label, color = Color.White)
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row (modifier = Modifier.align(Alignment.CenterHorizontally)){
+                        Box(modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 10.dp, end = 20.dp)) {
+                            Text("Speed is measured in km/h, and can help you see your progress in activaties, like cycling or running",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Justify
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(50.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun NutritionCaloriesScreen(navController: NavHostController, viewModel: HomeViewModel = hiltViewModel()) {
+
+    //data
+    val weeksNutrition by viewModel.weeklyNutritionCounts.collectAsState()
+    val weeksNutritionFloats = weeksNutrition.map { it.toFloat() }
+
+    val monthsNutrition by viewModel.monthlyNutritionCounts.collectAsState()
+    val monthsNutritionFloats = monthsNutrition.map { it.toFloat() }
+
+    val averageCalEatDay = weeksNutrition.filter { it > 0 }.average()
+    val averageCalEatBox = monthsNutrition.filter { it > 0 }.average()
+
+    val markerText = "Average Calories consumed:"
+
+    Scaffold(
+        topBar = {
+            CustomTopAppBar(
+                title = "Calories Consumed",
+                onEditClick = { /* ... */ },
+                showEditIcon = false ,
+                showBackButton = true,
+            )
+        },
+        bottomBar = {
+            CustomBottomNavigationBar(
+                navController = navController,
+                items = listOf("Dashboard", "Health", "Me"),
+                icons = listOf(Icons.Default.Home, Icons.Default.Favorite, Icons.Default.Person)
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .fillMaxWidth()
+                .background(Color(0xFF262626))
+                .padding(start = 10.dp)
+                .padding(paddingValues)
+        ) {
+            item {
+                val context = LocalContext.current
+                // State to trigger re-fetching data
+                var fetchDataTrigger by remember { mutableStateOf(false) }
+                // Example fetching function
+                val fetchCaloriesData = remember {
+                    {
+                        viewModel.fetchTodaysNutrition()
+                        viewModel.fetchWeeksNutrition()
+                        viewModel.fetchMonthNutrition()
+                        Log.d("MyHealthApp", "Data fetched")
+                    }
+                }
+                LaunchedEffect(fetchDataTrigger) {
+                    fetchCaloriesData()
+                }
+                CaloriesInput { calories ->
+                    val currentTime = System.currentTimeMillis()
+                    CoroutineScope(Dispatchers.IO).launch {
+                        addCaloriesToGoogleFit(context, calories, currentTime, currentTime)
+                        fetchDataTrigger = !fetchDataTrigger
+                    }
+                }
+            }
+            item {
+                val labels = listOf("Week", "Month")
+                val selectedLabel = remember { mutableStateOf("Week") }
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp)
+                ) {
+                    Spacer(modifier = Modifier.height(30.dp))
+                    Box(modifier = Modifier
+                        .background(color = Color.DarkGray, shape = RoundedCornerShape(10.dp))
+                    ) {
+                        if(selectedLabel.value == "Week")
+                            Text(
+                                text="Average calories consumed: ${averageCalEatDay.toInt()}",
+                                color = Color.White,
+                                fontSize = 20.sp,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        else
+                            Text(
+                                text="Average calories consumed: ${averageCalEatBox.toInt()}",
+                                color = Color.White,
+                                fontSize = 20.sp,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                    }
+                    if(selectedLabel.value == "Week") {
+                        Chart2(
+                            modifier = Modifier
+                                .padding(end = 10.dp)
+                                .height(350.dp),
+                            stepData = weeksNutritionFloats,
+                            axisFormatter = bottomAxisValueFormatter,
+                            scrollState = false,
+                            color = 0xFFA6DECD,
+                            markerText = "Calories consumed:"
+                        )
+                    }
+                    if(selectedLabel.value == "Month") {
+                        Chart2(
+                            modifier = Modifier
+                                .padding(end = 10.dp)
+                                .height(350.dp),
+                            stepData = monthsNutritionFloats,
+                            axisFormatter = bottomAxisValueFormatterMonth,
+                            scrollState = true,
+                            color = 0xFFA6DECD,
+                            markerText = markerText
+                        )
+                    }
+                    Row(modifier = Modifier
+                        .padding(top = 20.dp, end = 10.dp)
+                        .fillMaxWidth()
+                        .padding(start = 15.dp, end = 15.dp)) {
+                        labels.forEachIndexed { index, label ->
+                            val shape = when (index) {
+                                0 -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)
+                                labels.lastIndex -> RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp)
+                                else -> RectangleShape
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .background(
+                                        if (label == selectedLabel.value) Color(0xFFA6DECD) else Color.DarkGray,
+                                        shape = shape
+                                    )
+                                    .clickable { selectedLabel.value = label }
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = label, color = Color.White)
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row (modifier = Modifier.align(Alignment.CenterHorizontally)){
+                        Box(modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 10.dp, end = 20.dp)) {
+                            Text("Calories are an estimate of energy gained from food and drink",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Justify
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(50.dp))
+                }
+            }
+        }
+    }
+}
+@Composable
+fun CaloriesInput(onAddCalories: (Float) -> Unit) {
+    var calories by remember { mutableStateOf("") }
+    Spacer(modifier = Modifier.height(20.dp))
+    Box(modifier = Modifier
+        .padding(top = 10.dp, end = 10.dp)
+        .clip(RoundedCornerShape(10.dp))
+        .fillMaxWidth()
+        .background(color = Color.DarkGray)
+        .padding(20.dp)) {
+        Column {
+            Text(text = "Enter calories", color = Color.White, modifier = Modifier.fillMaxWidth(), fontSize = 20.sp, textAlign = TextAlign.Center)
+            // Calories input field
+            OutlinedTextField(
+                value = calories,
+                onValueChange = { calories = it.filter { char -> char.isDigit() || char == '.' } },
+                label = { Text("Calories") },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 0.dp),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+            Button(
+                onClick = {
+                    // Convert the input to Float and trigger the addition function
+                    calories.toFloatOrNull()?.let { cal ->
+                        onAddCalories(cal)
+                        calories = "" // Reset input field after submission
+                    }
+                },
+                modifier = Modifier
+                    .padding(end = 0.dp)
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF08012e)),
+                ) {
+                Text("Add Calories", color = Color.White, fontSize = 16.sp)
+            }
+        }
+    }
+}
 @Composable
 internal fun Chart2(
     modifier: Modifier,
@@ -710,18 +1327,25 @@ private fun ComposeChart2(
     markerText: String
 ) {
     val isSleepData = markerText.contains("sleep", ignoreCase = true)
-    val isBPMData = markerText.contains("BPM", ignoreCase = true)
+    val distanceData = markerText.contains("distance", ignoreCase = true)
+    val speedData = markerText.contains("speed", ignoreCase = true)
     val itemPlacer = if (isSleepData) {
         remember { AxisItemPlacer.Vertical.step({ _ -> 1f }, false) }
-    } else {
+    } else if(speedData){
+        remember { AxisItemPlacer.Vertical.step({ _ -> 1f }, false) }
+    }else {
         remember { AxisItemPlacer.Vertical.step() }
     }
     val startAxisH = if(isSleepData) {
             AxisValueFormatter<AxisPosition.Vertical.Start> { value, _, _ ->
                 "${value.toInt()}h"
             }
-    }
-    else {
+    } else if(distanceData){
+        AxisValueFormatter<AxisPosition.Vertical.Start> { value, _, _ ->
+            "${value.toInt()}m"
+        }
+
+    } else {
         AxisValueFormatter<AxisPosition.Vertical.Start> { value, _, _ ->
             "${value.toInt()}"
         }
@@ -745,7 +1369,7 @@ private fun ComposeChart2(
                 axis = rememberAxisLineComponent(Color.White),
                 guideline = rememberAxisGuidelineComponent(Color.White),
                 itemPlacer = itemPlacer,
-                valueFormatter = startAxisH
+                valueFormatter = startAxisH,
             ),
             bottomAxis =
             rememberBottomAxis(

@@ -6,8 +6,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.bakis.graphscreen.CaloriesScreen
+import com.example.bakis.graphscreen.DistanceScreen
+import com.example.bakis.graphscreen.HeartRateRestingScreen
 import com.example.bakis.graphscreen.HeartRateScreen
+import com.example.bakis.graphscreen.MoveMinutesScreen
+import com.example.bakis.graphscreen.NutritionCaloriesScreen
 import com.example.bakis.graphscreen.SleepScreen
+import com.example.bakis.graphscreen.SpeedScreen
 import com.example.bakis.graphscreen.StepScreen
 import com.example.bakis.graphscreen.WaterIntakeScreen
 import com.example.bakis.healthscreens.ExerciseTracking
@@ -53,16 +58,31 @@ fun SetupNavigation(navController: NavHostController, homeViewModel: HomeViewMod
             HeartRateScreen(navController, homeViewModel)
         }
         composable("heartRateZones") {
-            HeartRateZones(navController)
+            HeartRateZones(navController, homeViewModel)
+        }
+        composable("heartRateResting") {
+            HeartRateRestingScreen(navController, homeViewModel)
         }
         composable("exerciseTracking") {
-            ExerciseTracking(navController)
+            ExerciseTracking(navController, homeViewModel)
+        }
+        composable("nutritionCalories") {
+            NutritionCaloriesScreen(navController, homeViewModel)
+        }
+        composable("moveMinutes") {
+            MoveMinutesScreen(navController, homeViewModel)
+        }
+        composable("distance") {
+            DistanceScreen(navController, homeViewModel)
+        }
+        composable("speed") {
+            SpeedScreen(navController, homeViewModel)
         }
         composable("stressManagement") {
             StressManagement(navController)
         }
         composable("nutritionalTracking") {
-            NutritionalTracking(navController)
+            NutritionalTracking(navController, homeViewModel)
         }
         composable("caloriesScreen"){
             CaloriesScreen(navController = navController)

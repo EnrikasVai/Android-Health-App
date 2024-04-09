@@ -120,6 +120,12 @@ class CustomMarkerLabelFormatter(
         chartValues: ChartValues
     ): CharSequence {
         val isSleepData = markerText.contains("sleep", ignoreCase = true)
+        val isStepData = markerText.contains("steps", ignoreCase = true)
+        val isMinutes = markerText.contains("minutes", ignoreCase = true)
+        val isDistance = markerText.contains("distance", ignoreCase = true)
+        val isSpeed = markerText.contains("speed", ignoreCase = true)
+
+
         val labelBuilder = StringBuilder()
         for (entry in markedEntries) {
             val index = entry.index
@@ -129,7 +135,20 @@ class CustomMarkerLabelFormatter(
                 val minutes = ((hoursFloat - hours) * 60).toInt()
                 val formattedTime = String.format("%dh %02dm", hours, minutes)
                 labelBuilder.append("$markerText ").append(formattedTime).append("\n")
-            } else {
+            } else if(isStepData){
+                val displayValue = String.format("%.0f", dataset[index])
+                labelBuilder.append("$markerText ").append(displayValue).append("\n")
+            }else if(isMinutes){
+                val displayValue = String.format("%.0f", dataset[index])
+                labelBuilder.append("$markerText ").append(displayValue).append("\n")
+            } else if(isDistance){
+                val convert = dataset[index]/1000
+                val displayValue = String.format("%.2f", convert)
+                labelBuilder.append("$markerText ").append(displayValue).append("\n")
+            }else if(isSpeed){
+                val displayValue = String.format("%.2f", dataset[index])
+                labelBuilder.append("$markerText ").append(displayValue).append("\n")
+            }else {
                 val displayValue = String.format("%.1f", dataset[index])
                 labelBuilder.append("$markerText ").append(displayValue).append("\n")
             }

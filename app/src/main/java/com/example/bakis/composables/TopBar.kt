@@ -1,5 +1,6 @@
 package com.example.bakis.composables
 
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,10 +40,9 @@ fun CustomTopAppBar(
     onEditClick: () -> Unit = {},
     showEditIcon: Boolean = false,
     showBackButton: Boolean = false,
-    onBackClick: () -> Unit = {}
 ) {
     var inEditMode by remember { mutableStateOf(false) }
-
+    val onBackPressedDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     // Custom AppBar layout
     Surface(color = Color(0xFF262626)) {
         Row(
@@ -54,7 +54,7 @@ fun CustomTopAppBar(
         ) {
             // Back button or spacer
             if (showBackButton) {
-                IconButton(onClick = onBackClick) {
+                IconButton(onClick = { onBackPressedDispatcher?.onBackPressed() }) {
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Back",

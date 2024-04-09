@@ -38,6 +38,8 @@ class MainActivity : ComponentActivity() {
             .addDataType(DataType.TYPE_MOVE_MINUTES, FitnessOptions.ACCESS_READ)
             .addDataType(DataType.TYPE_DISTANCE_DELTA, FitnessOptions.ACCESS_READ)
             .addDataType(DataType.TYPE_SPEED, FitnessOptions.ACCESS_READ)
+            .addDataType(DataType.TYPE_NUTRITION, FitnessOptions.ACCESS_READ)
+            .addDataType(DataType.TYPE_NUTRITION, FitnessOptions.ACCESS_WRITE)
             .build()
     }
 
