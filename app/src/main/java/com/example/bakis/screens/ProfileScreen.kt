@@ -20,14 +20,13 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -40,6 +39,8 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -65,7 +66,6 @@ import kotlinx.coroutines.withContext
 import kotlin.math.round
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = hiltViewModel()) {
     val userAge by viewModel.userAge.collectAsState()
@@ -83,7 +83,6 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
     var tempUserAge by remember { mutableStateOf(userAge.toString()) }
     var tempUserWeight by remember { mutableStateOf(userAge.toString()) }
     var tempUserHeight by remember { mutableStateOf(userAge.toString()) }
-    var tempUserSex by remember { mutableStateOf(userAge.toString()) }
 
 
     // Dialog states
@@ -97,12 +96,11 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
     var showDialog by remember { mutableStateOf(false) }
     if (showDialog) {
         Dialog(onDismissRequest = { showDialog = false }) {
-            // Enclose your dialog content inside a Surface to customize background color
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight(),
-                color = Color(0xFF262626), // Set the background color to grey
+                color = Color(0xFF262626),
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Column(
@@ -132,7 +130,6 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
                         color = Color.White
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    // Buttons in a row at the bottom of the dialog
                     Row(
                         modifier = Modifier.align(Alignment.End)
                     ) {
@@ -140,9 +137,9 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
                         Button(
                             onClick = { showDialog = false },
                             shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00a613)) // Set button color to red
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00a613))
                         ) {
-                            Text("Cancel")
+                            Text(text = "Cancel", color = Color.White)
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         // Confirm button
@@ -157,10 +154,10 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
                                 }
                             },
                             shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red) // Set button color to red
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
 
                         ) {
-                            Text("Confirm")
+                            Text("Confirm", color = Color.White)
                         }
                     }
                 }
@@ -173,7 +170,7 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
             CustomTopAppBar(
                 title = "Profile",
                 onEditClick = { isEditMode = !isEditMode },
-                showEditIcon = true // Only show the edit icon in the ProfileScreen
+                showEditIcon = true
             )
         },
         bottomBar = {
@@ -188,7 +185,7 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFF262626)) // Set the background color here
+                .background(Color(0xFF262626))
                 .padding(top = 40.dp),
         ) {
             item {
@@ -201,56 +198,48 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp)), // Adjust the corner radius as needed
+                            .clip(RoundedCornerShape(8.dp)),
                     ) {
                         Column(modifier = Modifier
                             .fillMaxWidth()
                             .background(Color(0xFF333333))
                         ) {
                             ProfileItem(label = "Name", value = userName, isEditMode) { showNameEditDialog = true }
-                            Divider(
-                                color = Color(0xFF666666), // Set the divider color to white
+                            HorizontalDivider(
                                 modifier = Modifier
-                                    .padding(horizontal = 10.dp) // Adjust padding to make the divider shorter
-                                    .fillMaxWidth()
+                                    .padding(horizontal = 10.dp)
+                                    .fillMaxWidth(),
+                                color = Color(0xFF666666)
                             )
                             ProfileItem(label = "Age", value = "$userAge", isEditMode) { showAgeEditDialog = true }
-                            Divider(
-                                color = Color(0xFF666666), // Set the divider color to white
+                            HorizontalDivider(
                                 modifier = Modifier
-                                    .padding(horizontal = 10.dp) // Adjust padding to make the divider shorter
-                                    .fillMaxWidth()
+                                    .padding(horizontal = 10.dp)
+                                    .fillMaxWidth(),
+                                color = Color(0xFF666666)
                             )
                             ProfileItem(label = "Weight", value = "$userWeight kg", isEditMode){showWeightEditDialog = true}
-                            Divider(
-                                color = Color(0xFF666666), // Set the divider color to white
+                            HorizontalDivider(
                                 modifier = Modifier
-                                    .padding(horizontal = 10.dp) // Adjust padding to make the divider shorter
-                                    .fillMaxWidth()
+                                    .padding(horizontal = 10.dp)
+                                    .fillMaxWidth(),
+                                color = Color(0xFF666666)
                             )
                             ProfileItem(label = "Height", value = "$userHeight cm", isEditMode){showHeightEditDialog = true}
-                            Divider(
-                                color = Color(0xFF666666), // Set the divider color to white
+                            HorizontalDivider(
                                 modifier = Modifier
-                                    .padding(horizontal = 10.dp) // Adjust padding to make the divider shorter
-                                    .fillMaxWidth()
+                                    .padding(horizontal = 10.dp)
+                                    .fillMaxWidth(),
+                                color = Color(0xFF666666)
                             )
                             ProfileItem(label = "Gender", value = if (userSex) "Male" else "Female", isEditMode){showSexEditDialog = true}
-                            Divider(
-                                color = Color(0xFF666666), // Set the divider color to white
-                                modifier = Modifier
-                                    .padding(horizontal = 10.dp) // Adjust padding to make the divider shorter
-                                    .fillMaxWidth()
-                            )
-                            ProfileItem(label = "ID(istrynt paskui)", value = "$userId", isEditMode){showSexEditDialog = true}
-
                         }
                     }
                 }
                 Spacer(modifier = Modifier.padding(16.dp))
                 Column(
-                    modifier = Modifier.fillMaxWidth(), // Ensures the Column takes the full width
-                    horizontalAlignment = Alignment.CenterHorizontally // Centers its children horizontally
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Button(
                         onClick = { showDialog = true },
@@ -258,7 +247,7 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
                             .padding(8.dp)
                             .width(250.dp),
                         shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red) // Set button color to red
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                     ) {
                         Text(
                             text = "Delete Profile",
@@ -270,7 +259,6 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
         }
     }
     if (showNameEditDialog) {
-        // Ensure tempUserName is updated to the latest userName before showing the dialog
         tempUserName = userName
         EditDialog(
             title = "Edit Name",
@@ -278,66 +266,56 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
             userId = userId,
             onConfirm ={ newName ->
                 viewModel.updateUserName(userId, newName)
-                tempUserName = newName // Update the temporary holder with the new value
+                tempUserName = newName
                 showNameEditDialog = false },
             onDismiss = { showNameEditDialog = false }
         )
     }
     if (showSexEditDialog) {
-        val initialSex = if (userSex) "Male" else "Female" // Adjust this line based on your actual `userSex` type
+        val initialSex = if (userSex) "Male" else "Female"
         EditDialogSex(
             title = "Edit Sex",
             initialSex = initialSex,
             userId = userId,
             onConfirm = { newSex ->
-                viewModel.updateUserSex(userId, newSex.toBoolean()) // Make sure this method exists and is correctly implemented
-                // Update the UI or state as needed after the sex is updated
+                viewModel.updateUserSex(userId, newSex.toBoolean())
                 showSexEditDialog = false},
             onDismiss = {showSexEditDialog = false}
         )
     }
     if (showAgeEditDialog) {
-        // Ensure tempUserAge is set to the current age just before showing the dialog
-        tempUserAge = userAge.toString() // Assuming userAge is up-to-date
-        // Safely convert tempUserAge to an integer, providing a default value if needed
-        val currentAge = tempUserAge.toIntOrNull() ?: 18 // Use a sensible default if conversion fails
+        tempUserAge = userAge.toString()
+        val currentAge = tempUserAge.toIntOrNull() ?: 18
         EditDialogAge(
             title = "Edit Age",
             ageValue = currentAge,
             userId = userId,
             onConfirm = { newAge ->
                 viewModel.viewModelScope.launch {
-                    // Update the age in your ViewModel here
-                    viewModel.updateUserAge(userId, newAge) // Assuming updateUserAge exists
+                    viewModel.updateUserAge(userId, newAge)
                 }
-                // After updating, you may want to also update userAge in your ViewModel to reflect the change immediately
                 showAgeEditDialog = false },
             onDismiss = {showAgeEditDialog = false}
         )
     }
     if (showHeightEditDialog) {
-        // Ensure tempUserAge is set to the current age just before showing the dialog
-        tempUserHeight = userHeight.toString() // Assuming userAge is up-to-date
-        // Safely convert tempUserAge to an integer, providing a default value if needed
-        val currentHeight = tempUserHeight.toIntOrNull() ?: 160 // Use a sensible default if conversion fails
+        tempUserHeight = userHeight.toString()
+        val currentHeight = tempUserHeight.toIntOrNull() ?: 160
         EditDialogHeight(
             title = "Edit Height",
             heightValue = currentHeight,
             userId = userId,
             onConfirm = { newHeight ->
                 viewModel.viewModelScope.launch {
-                    // Update the age in your ViewModel here
-                    viewModel.updateUserHeight(userId, newHeight) // Assuming updateUserAge exists
+                    viewModel.updateUserHeight(userId, newHeight)
                 }
-                // After updating, you may want to also update userAge in your ViewModel to reflect the change immediately
                 showHeightEditDialog = false},
             onDismiss = {showHeightEditDialog = false}
         )
     }
     if (showWeightEditDialog) {
-        tempUserWeight = userWeight.toString() // Make sure userWeight is a Double and up-to-date
-        // Convert tempUserWeight safely to Double, providing a default if needed
-        val currentWeight: Double = tempUserWeight.toDoubleOrNull() ?: 160.0 // Explicitly typed as Double
+        tempUserWeight = userWeight.toString()
+        val currentWeight: Double = tempUserWeight.toDoubleOrNull() ?: 160.0
 
         EditDialogWeight(
             title = "Edit Weight",
@@ -345,10 +323,8 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
             userId = userId,
             onConfirm = { newWeight ->
                 viewModel.viewModelScope.launch {
-                    // Make sure updateUserWeight method accepts Double
                     viewModel.updateUserWeight(userId, newWeight)
                 }
-                // Close the dialog and possibly refresh userWeight in your ViewModel to reflect the update
                 showWeightEditDialog = false},
             onDismiss = {showWeightEditDialog = false}
         )
@@ -384,12 +360,11 @@ fun EditDialog(title: String, textValue: String, userId: Int, onConfirm: (String
     val viewModel: HomeViewModel = hiltViewModel()
 
     Dialog(onDismissRequest = { onDismiss() }) {
-        // Container for dialog content
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
-            color = Color(0xFF262626), // Set the background color to grey
+            color = Color(0xFF262626),
             shape = RoundedCornerShape(8.dp)
         ) {
             Column(
@@ -401,7 +376,7 @@ fun EditDialog(title: String, textValue: String, userId: Int, onConfirm: (String
                     color= Color.White,
                     fontSize = 20.sp,
                     modifier = Modifier
-                        .fillMaxWidth() // Make the Text composable fill the maximum width of its parent
+                        .fillMaxWidth()
                         .wrapContentSize(align = Alignment.Center)
                 )
                 Spacer(modifier = Modifier.padding(16.dp))
@@ -413,27 +388,26 @@ fun EditDialog(title: String, textValue: String, userId: Int, onConfirm: (String
                     modifier = Modifier.fillMaxWidth()
                         .background(Color.LightGray),
                     colors = TextFieldDefaults.textFieldColors(
-                        //textColor = Color.Black, // Color of the text
-                        cursorColor = Color.Blue, // keep
-                        focusedIndicatorColor = Color.Blue, // Keep
-                        unfocusedIndicatorColor = Color.Black, // Color of the indicator (bottom line) when not focused
-                        disabledIndicatorColor = Color.Black, // Color of the indicator (bottom line) when disabled
+                        cursorColor = Color.Blue,
+                        focusedIndicatorColor = Color.Blue,
+                        unfocusedIndicatorColor = Color.Black,
+                        disabledIndicatorColor = Color.Black,
                     ),
                 )
                 Spacer(modifier = Modifier.padding(16.dp))
                 // Button row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End // Aligns the buttons to the end (right side) of the row
+                    horizontalArrangement = Arrangement.End
                 ) {
                     // Dismiss button
                     Button(
                         onClick = { onDismiss() },
                         shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red), // Set button color to red
-                        modifier = Modifier.padding(end = 8.dp) // Adds spacing between the buttons
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                        modifier = Modifier.padding(end = 8.dp)
                     ) {
-                        Text("Cancel")
+                        Text("Cancel" , color = Color.White)
                     }
 
                     // Confirm button
@@ -441,13 +415,13 @@ fun EditDialog(title: String, textValue: String, userId: Int, onConfirm: (String
                         onClick = {
                             onConfirm(text)
                             viewModel.viewModelScope.launch {
-                                viewModel.updateUserName(userId, text) // Make sure userId is accessible here
+                                viewModel.updateUserName(userId, text)
                             }
                         },
                         shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00a613)) // Set button color to red
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00a613))
                     ) {
-                        Text("Save")
+                        Text("Save" , color = Color.White)
                     }
                 }
             }
@@ -459,7 +433,6 @@ fun EditDialog(title: String, textValue: String, userId: Int, onConfirm: (String
 fun EditDialogSex(title: String, initialSex: String, userId: Int, onConfirm: (String) -> Unit, onDismiss: () -> Unit) {
     val viewModel: HomeViewModel = hiltViewModel()
     val genderOptions = listOf("Female", "Male")
-    // Track selected sex with a proper state
     var selectedSex by remember { mutableStateOf(initialSex) }
 
     Dialog(onDismissRequest = { onDismiss() }) {
@@ -467,7 +440,7 @@ fun EditDialogSex(title: String, initialSex: String, userId: Int, onConfirm: (St
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
-            color = Color(0xFF262626), // Set the background color to grey
+            color = Color(0xFF262626),
             shape = RoundedCornerShape(8.dp)
         ) {
             Column(
@@ -478,12 +451,11 @@ fun EditDialogSex(title: String, initialSex: String, userId: Int, onConfirm: (St
                     color= Color.White,
                     fontSize = 20.sp,
                     modifier = Modifier
-                        .fillMaxWidth() // Make the Text composable fill the maximum width of its parent
+                        .fillMaxWidth()
                         .wrapContentSize(align = Alignment.Center)
                         .padding(top= 16.dp)
                 )
                 Column(modifier = Modifier.padding(all = 8.dp)) {
-                    // Your options list
                     genderOptions.forEach { option ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -508,11 +480,11 @@ fun EditDialogSex(title: String, initialSex: String, userId: Int, onConfirm: (St
                     Button(onClick = { onDismiss() },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                         shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.padding(end = 8.dp) // Adds spacing between the buttons
+                        modifier = Modifier.padding(end = 8.dp)
                     ) {
-                        Text("Cancel")
+                        Text(text ="Cancel", color = Color.White)
                     }
-                    Spacer(Modifier.width(8.dp)) // Space between buttons
+                    Spacer(Modifier.width(8.dp))
                     Button(
                         onClick = {
                             val isMale = selectedSex == "Male"
@@ -522,9 +494,9 @@ fun EditDialogSex(title: String, initialSex: String, userId: Int, onConfirm: (St
                             }
                         },
                         shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00a613)) // Set button color to red
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00a613))
                     ) {
-                        Text("Save")
+                        Text("Save", color = Color.White)
                     }
                 }
             }
@@ -535,17 +507,16 @@ fun EditDialogSex(title: String, initialSex: String, userId: Int, onConfirm: (St
 
 @Composable
 fun EditDialogAge(title: String, ageValue: Int, userId: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Unit) {
-    // Remember the current age value and convert it to a mutable state to allow changes
-    var age by remember { mutableStateOf(ageValue) }
+    var age by remember { mutableIntStateOf(ageValue) }
     val viewModel: HomeViewModel = hiltViewModel()
 
-    Dialog(onDismissRequest = { /* Do something if needed when the dialog is dismissed */ }) {
+    Dialog(onDismissRequest = {}) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
-            color = Color(0xFF262626), // Use the grey color for the background as in the previous prompt
-            shape = RoundedCornerShape(8.dp) // Use rounded corners for the shape
+            color = Color(0xFF262626),
+            shape = RoundedCornerShape(8.dp)
         ) {
             Column(
                 modifier = Modifier.padding(all = 8.dp)
@@ -555,17 +526,17 @@ fun EditDialogAge(title: String, ageValue: Int, userId: Int, onConfirm: (Int) ->
                     color = Color.White,
                     fontSize = 20.sp,
                     modifier = Modifier
-                        .fillMaxWidth() // Fill the maximum width
+                        .fillMaxWidth()
                         .wrapContentSize(Alignment.Center)
                         .padding(top = 16.dp)
                 )
-                Spacer(Modifier.height(16.dp)) // Space between buttons
+                Spacer(Modifier.height(16.dp))
                 Column(modifier = Modifier.padding(all = 8.dp)) {
                     Text("Age: $age years", color = Color(0xFFd3d3d3))
                     Slider(
                         value = age.toFloat(),
                         onValueChange = { age = it.toInt() },
-                        valueRange = 12f..100f, // Age range
+                        valueRange = 12f..100f,
                         modifier = Modifier.fillMaxWidth(),
                         colors = SliderDefaults.colors(
                             thumbColor = Color(0xFFd3d3d3),
@@ -582,24 +553,24 @@ fun EditDialogAge(title: String, ageValue: Int, userId: Int, onConfirm: (Int) ->
                 ) {
                     Button(
                         onClick = { onDismiss() },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red), // Cancel button with red color
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.padding(end = 8.dp)
                     ) {
-                        Text("Cancel")
+                        Text("Cancel" , color = Color.White)
                     }
-                    Spacer(Modifier.width(8.dp)) // Space between Cancel and Save buttons
+                    Spacer(Modifier.width(8.dp))
                     Button(
                         onClick = {
                             onConfirm(age)
                             viewModel.viewModelScope.launch {
-                                viewModel.updateUserAge(userId, age) // Perform the save operation
+                                viewModel.updateUserAge(userId, age)
                             }
                         },
                         shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00a613)) // Save button with green color
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00a613))
                     ) {
-                        Text("Save")
+                        Text("Save", color = Color.White)
                     }
                 }
             }
@@ -609,17 +580,16 @@ fun EditDialogAge(title: String, ageValue: Int, userId: Int, onConfirm: (Int) ->
 }
 @Composable
 fun EditDialogHeight(title: String, heightValue: Int, userId: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Unit) {
-    // Remember the current age value and convert it to a mutable state to allow changes
-    var height by remember { mutableStateOf(heightValue) }
+    var height by remember { mutableIntStateOf(heightValue) }
     val viewModel: HomeViewModel = hiltViewModel()
 
-    Dialog(onDismissRequest = { /* Do something if needed when the dialog is dismissed */ }) {
+    Dialog(onDismissRequest = {  }) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
-            color = Color(0xFF262626), // Using the grey color for the background as before
-            shape = RoundedCornerShape(8.dp) // Rounded corners for the dialog
+            color = Color(0xFF262626),
+            shape = RoundedCornerShape(8.dp)
         ) {
             Column(
                 modifier = Modifier.padding(all = 8.dp)
@@ -629,17 +599,17 @@ fun EditDialogHeight(title: String, heightValue: Int, userId: Int, onConfirm: (I
                     color = Color.White,
                     fontSize = 20.sp,
                     modifier = Modifier
-                        .fillMaxWidth() // Make the Text composable fill the maximum width
+                        .fillMaxWidth()
                         .wrapContentSize(Alignment.Center)
                         .padding(top = 16.dp)
                 )
-                Spacer(Modifier.height(16.dp)) // Space between Cancel and Save buttons
+                Spacer(Modifier.height(16.dp))
                 Column(modifier = Modifier.padding(all = 8.dp)) {
                     Text("Height: $height cm", color = Color(0xFFd3d3d3))
                     Slider(
                         value = height.toFloat(),
                         onValueChange = { height = it.toInt() },
-                        valueRange = 100f..220f, // Height range
+                        valueRange = 100f..220f,
                         modifier = Modifier.fillMaxWidth(),
                         colors = SliderDefaults.colors(
                             thumbColor = Color(0xFFd3d3d3),
@@ -656,24 +626,24 @@ fun EditDialogHeight(title: String, heightValue: Int, userId: Int, onConfirm: (I
                 ) {
                     Button(
                         onClick = { onDismiss() },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red), // Cancel button with red color
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.padding(end = 8.dp)
                     ) {
-                        Text("Cancel")
+                        Text("Cancel", color = Color.White)
                     }
-                    Spacer(Modifier.width(8.dp)) // Space between Cancel and Save buttons
+                    Spacer(Modifier.width(8.dp))
                     Button(
                         onClick = {
                             onConfirm(height)
                             viewModel.viewModelScope.launch {
-                                viewModel.updateUserHeight(userId, height) // Action on Save button click
+                                viewModel.updateUserHeight(userId, height)
                             }
                         },
                         shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00a613)) // Save button with green color
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00a613))
                     ) {
-                        Text("Save")
+                        Text("Save", color = Color.White)
                     }
                 }
             }
@@ -683,16 +653,16 @@ fun EditDialogHeight(title: String, heightValue: Int, userId: Int, onConfirm: (I
 }
 @Composable
 fun EditDialogWeight(title: String, weightValue: Double, userId: Int, onConfirm: (Double) -> Unit, onDismiss: () -> Unit) {
-    var weight by remember { mutableStateOf(weightValue) }
+    var weight by remember { mutableDoubleStateOf(weightValue) }
     val viewModel: HomeViewModel = hiltViewModel()
 
-    Dialog(onDismissRequest = { /* Do something if needed when the dialog is dismissed */ }) {
+    Dialog(onDismissRequest = {  }) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
-            color = Color(0xFF262626), // Set the background color to grey as in previous examples
-            shape = RoundedCornerShape(8.dp) // Rounded corners for the dialog
+            color = Color(0xFF262626),
+            shape = RoundedCornerShape(8.dp)
         ) {
             Column(
                 modifier = Modifier.padding(all = 8.dp)
@@ -702,18 +672,17 @@ fun EditDialogWeight(title: String, weightValue: Double, userId: Int, onConfirm:
                     color = Color.White,
                     fontSize = 20.sp,
                     modifier = Modifier
-                        .fillMaxWidth() // Fill the maximum width
+                        .fillMaxWidth()
                         .wrapContentSize(Alignment.Center)
                         .padding(top = 16.dp)
                 )
-                Spacer(Modifier.height(16.dp)) // Space between Cancel and Save buttons
+                Spacer(Modifier.height(16.dp))
                 Column(modifier = Modifier.padding(all = 8.dp)) {
                     Text("Weight: $weight kg", color = Color(0xFFd3d3d3))
                     Slider(
                         value = weight.toFloat(),
                         onValueChange = { newValue ->
-                            // More refined adjustment for .0 and .5 increments
-                            weight = (round(newValue * 2) / 2.0).toDouble()
+                            weight = (round(newValue * 2) / 2.0)
                         },
                         valueRange = 30f..200f,
                         modifier = Modifier.fillMaxWidth(),
@@ -722,7 +691,6 @@ fun EditDialogWeight(title: String, weightValue: Double, userId: Int, onConfirm:
                             activeTrackColor = Color(0xFFD3D3D3),
                             inactiveTrackColor = Color(0xFFD3D3D3).copy(alpha = 0.24f)
                         )
-                        // Steps parameter is removed since we are manually adjusting the value to conform to .5 steps.
                     )
                 }
                 Spacer(modifier = Modifier.padding(8.dp))
@@ -733,24 +701,24 @@ fun EditDialogWeight(title: String, weightValue: Double, userId: Int, onConfirm:
                 ) {
                     Button(
                         onClick = { onDismiss() },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red), // Cancel button with red color
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.padding(end = 8.dp)
                     ) {
-                        Text("Cancel")
+                        Text("Cancel" , color = Color.White)
                     }
-                    Spacer(Modifier.width(8.dp)) // Space between Cancel and Save buttons
+                    Spacer(Modifier.width(8.dp))
                     Button(
                         onClick = {
                             onConfirm(weight)
                             viewModel.viewModelScope.launch {
-                                viewModel.updateUserWeight(userId, weight) // Update user weight
+                                viewModel.updateUserWeight(userId, weight)
                             }
                         },
                         shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00a613)) // Save button with green color
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00a613))
                     ) {
-                        Text("Save")
+                        Text("Save" , color = Color.White)
                     }
                 }
             }

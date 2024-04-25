@@ -111,6 +111,11 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel(), navController: Na
     LaunchedEffect(key1 = userId) {
         homeViewModel.fetchWaterIntakeRecords(userId)
         homeViewModel.fetchDailyWaterIntakeForUser(userId, today)
+        homeViewModel.fetchBpmCount()
+        homeViewModel.fetchCalCount()
+        homeViewModel.fetchFitnessData()
+        homeViewModel.fetchStepCount()
+        homeViewModel.fetchSleepCount()
     }
     Scaffold(
         topBar = {
@@ -150,7 +155,6 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel(), navController: Na
                             InfoBox(
                                 infoData = infoData,
                                 navController = navController,
-                                homeViewModel
                             )
                             if (infoData != pairList.last()) Spacer(modifier = Modifier.width(16.dp))
                         }
@@ -186,8 +190,6 @@ fun StepBox(
             modifier = Modifier
                 .width(356.dp)
                 .height(200.dp)
-                //.padding(bottom = 8.dp)
-                //.shadow(8.dp, RoundedCornerShape(10.dp))
                 .clip(RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp))
                 .background(Color(0xFF333333))
         ) {
@@ -271,35 +273,33 @@ fun StepBox(
         Row(
             modifier = Modifier
                 .width(356.dp)
-                //.shadow(8.dp, RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp))
                 .clip(RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp))
                 .background(color = Color(0xFF333333))
                 .padding(10.dp),
-            verticalAlignment = Alignment.CenterVertically // Align items vertically in the center
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
                 modifier = Modifier
-                    .weight(1f) // Equal weight
+                    .weight(1f)
                     .padding(4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
-            ) { // Optional padding for visual adjustment
+            ) {
                 Text(text = "${infoData.min.toInt()}", color = Color.White, fontSize = 20.sp)
                 Text(text = "Min", color = Color.White)
             }
             Column(
                 modifier = Modifier
-                    .weight(1f) // Equal weight
+                    .weight(1f)
                     .padding(4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Format the distance to two decimal places
                 val formattedDistance = String.format("%.2f", infoData.distance / 1000)
                 Text(text = formattedDistance, color = Color.White, fontSize = 20.sp)
                 Text(text = "Km", color = Color.White)
             }
             Column(
                 modifier = Modifier
-                    .weight(1f) // Equal weight
+                    .weight(1f)
                     .padding(4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -320,7 +320,6 @@ fun StepBox(
 fun InfoBox(
     infoData: InfoData,
     navController: NavHostController,
-    viewModel:HomeViewModel
 ) {
     val iconColor = Color(infoData.color)
     val textColor = Color(infoData.color)

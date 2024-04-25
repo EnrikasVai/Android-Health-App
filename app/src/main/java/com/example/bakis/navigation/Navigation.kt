@@ -18,7 +18,6 @@ import com.example.bakis.graphscreen.WaterIntakeScreen
 import com.example.bakis.healthscreens.ExerciseTracking
 import com.example.bakis.healthscreens.HeartRateZones
 import com.example.bakis.healthscreens.NutritionalTracking
-import com.example.bakis.healthscreens.StressManagement
 import com.example.bakis.screens.FirstTimeScreen
 import com.example.bakis.screens.HealthScreen
 import com.example.bakis.screens.HomeScreen
@@ -31,7 +30,6 @@ import com.example.bakis.viewmodel.HomeViewModel
 fun SetupNavigation(navController: NavHostController, homeViewModel: HomeViewModel) {
     NavHost(navController = navController, startDestination = "welcome") {
         composable("home") {
-            // Pass `navController` to `HomeScreen` here
             HomeScreen(navController = navController)
         }
         composable("health") {
@@ -78,9 +76,6 @@ fun SetupNavigation(navController: NavHostController, homeViewModel: HomeViewMod
         composable("speed") {
             SpeedScreen(navController, homeViewModel)
         }
-        composable("stressManagement") {
-            StressManagement(navController)
-        }
         composable("nutritionalTracking") {
             NutritionalTracking(navController, homeViewModel)
         }
@@ -90,6 +85,5 @@ fun SetupNavigation(navController: NavHostController, homeViewModel: HomeViewMod
         composable("waterIntakeScreen"){
             WaterIntakeScreen(navController = navController)
         }
-        // Add any additional destinations here
     }
 }

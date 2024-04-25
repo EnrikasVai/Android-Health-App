@@ -54,7 +54,6 @@ fun HealthScreen(navController: NavHostController, onNavigate: (String) -> Unit)
     val data = listOf(
         HealthScreenData(R.drawable.heartratezones,"Heart Rate Vitals", 0xFFFF7518, 0xFFFF3131, "heartRateZones"),
         HealthScreenData(R.drawable.exercise,"Activity Tracking", 0xFFC492E6, 0xFF8A2BE2, "exerciseTracking"),
-        //HealthScreenData(R.drawable.stress,"Stress Management", 0xFF0A0F44, 0xFF00C1D0, "stressManagement"),
         HealthScreenData(R.drawable.nutrition,"Nutritional Tracking", 0xFFD147AB, 0xFFF8BBD0, "nutritionalTracking")
     )
         Scaffold(
@@ -81,7 +80,7 @@ fun HealthScreen(navController: NavHostController, onNavigate: (String) -> Unit)
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .wrapContentHeight(), // Make LazyColumn wrap its content
+                        .wrapContentHeight(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     items(data.size) { index ->
@@ -103,13 +102,13 @@ fun NavButton(
             .padding(10.dp)
             .width(300.dp)
             .height(100.dp)
-            .clip(RoundedCornerShape(12.dp)) // Clip applies to this outer Box
+            .clip(RoundedCornerShape(12.dp))
             .background(Brush.horizontalGradient(colors = listOf(color1, color2)))
             .clickable { onNavigate(data.rout) },
     ) {
         Box(
             modifier = Modifier
-                .matchParentSize() // Ensures this Box fills the clipped parent
+                .matchParentSize()
                 .padding(10.dp),
             contentAlignment = Alignment.Center
         ) {

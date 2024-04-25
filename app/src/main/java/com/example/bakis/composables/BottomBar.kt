@@ -18,19 +18,17 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 
 @Composable
 fun CustomBottomNavigationBar(
-    navController: NavController, // Keep NavController
+    navController: NavController,
     items: List<String>,
     icons: List<ImageVector>
 ) {
-    // Derive the selected index based on the current route
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val selectedItem = when (currentRoute) {
         "home" -> 0
         "health" -> 1
         "profile" -> 2
-        // Add more mappings as necessary
-        else -> 0 // Default selection or determine dynamically
+        else -> 0
     }
 
     BottomAppBar(containerColor = Color(0xFF1a1a1a), modifier = Modifier.height(70.dp)) {
@@ -54,20 +52,16 @@ fun CustomBottomNavigationBar(
                             0 -> "home"
                             1 -> "health"
                             2 -> "profile"
-                            // Add more cases as necessary
                             else -> "home"
                         }
                         navController.navigate(route) {
-                            // Ensure we don't create a new instance if we're navigating to the current destination
                             launchSingleTop = true
-                            // Restore state when navigating to a top level destination
                             restoreState = true
-                            // Pop up to the start destination to avoid a large stack of destinations
                             popUpTo(navController.graph.startDestinationId)
                         }
                     },
                     colors = NavigationBarItemDefaults.colors(
-                        indicatorColor = Color(0xFF1a1a1a) // Hide indicator by setting it to container color
+                        indicatorColor = Color(0xFF1a1a1a)
                 )
                 )
             }

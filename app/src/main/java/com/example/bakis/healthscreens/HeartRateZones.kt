@@ -25,10 +25,6 @@ import kotlin.math.roundToInt
 
 @Composable
 fun HeartRateZones(navController: NavController, viewModel: HomeViewModel = hiltViewModel()){
-    val weeksNutrition by viewModel.weeklyNutritionCounts.collectAsState()
-    val weeksNutritionFloats = weeksNutrition.map { it.toFloat() }
-
-
     val bpmCount by viewModel.bpmCount.collectAsState()
     val numericBpmCount = bpmCount.toFloatOrNull() ?: 0f
     val roundedBpmCount = numericBpmCount.roundToInt()
@@ -44,6 +40,10 @@ fun HeartRateZones(navController: NavController, viewModel: HomeViewModel = hilt
     LaunchedEffect(Unit) {
         viewModel.fetchBpmCount()
         viewModel.fetchWeeklyHeartRateCount()
+        viewModel.fetchMonthlyHeartRateCounts()
+        viewModel.fetchBpmCountResting()
+        viewModel.fetchWeeklyHeartRateCountResting()
+        viewModel.fetchMonthlyHeartRateCountsResting()
         Log.d("MyHealthApp", "Heart data fetched")
     }
 
@@ -69,18 +69,26 @@ fun HeartRateZones(navController: NavController, viewModel: HomeViewModel = hilt
                         caloriesPerDay = bpmPerDay,
                         navController = navController,
                         navigateTo = "bpmData",
-                        color = 0xFFA6DECD
+                        color = 0xFFfca46a
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     HealthBox(
                         title = "BPM Resting",
                         subtitle = "Last 7 days",
-                        detail = "$bpmStringResting bpm",
-                        detailSub = "Yesterday",
+                        detail = if (bpmStringResting.isNotEmpty() && bpmStringResting != "0") {
+                            "$bpmStringResting bpm"
+                        } else {
+                            "No Data"
+                        },
+                        detailSub = if (bpmStringResting.isNotEmpty() && bpmStringResting != "0") {
+                            "Yesterday"
+                        } else {
+                            ""
+                        },
                         caloriesPerDay = bpmRestingWeek,
                         navController = navController,
                         navigateTo = "heartRateResting",
-                        color = 0xFFA6DECD
+                        color = 0xFFfca46a
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     /*

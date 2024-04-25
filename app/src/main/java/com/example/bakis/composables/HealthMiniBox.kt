@@ -48,7 +48,7 @@ import java.util.Calendar
 fun calculateWeekDays(): List<String> {
     val daysOfWeek = listOf("S","M", "T", "W", "T", "F", "S")
     val calendar = Calendar.getInstance()
-    val today = calendar.get(Calendar.DAY_OF_WEEK) - 1 // Calendar.SUNDAY is 1
+    val today = calendar.get(Calendar.DAY_OF_WEEK) - 1
     return (0 until 7).map { i ->
         daysOfWeek[(today - i + 7) % 7]
     }.reversed()

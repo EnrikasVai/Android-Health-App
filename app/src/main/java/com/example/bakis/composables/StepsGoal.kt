@@ -44,10 +44,6 @@ fun StepProgressBar(stepsWalked: Int, stepGoal: Int, viewModel: HomeViewModel = 
     var showGoalDialog by remember { mutableStateOf(false) }
     val userStepGoal by viewModel.userStepGoal.collectAsState()
 
-    val movedMinutes by viewModel.todayMoveMinutes.collectAsState()
-    val moveSpeed by viewModel.todayAverageSpeed.collectAsState()
-    val movedDistance by viewModel.todayDistance.collectAsState()
-
     var StepsForGoal = stepsWalked
     if(stepsWalked>=userStepGoal)
         StepsForGoal=userStepGoal
@@ -78,7 +74,7 @@ fun StepProgressBar(stepsWalked: Int, stepGoal: Int, viewModel: HomeViewModel = 
             ) {
                 val barWidth = size.width * progress
                 drawRect(color = Color.LightGray)
-                drawRect(color = Color.Green, size = this.size.copy(width = barWidth))
+                drawRect(color = Color(0xFFf97e2c), size = this.size.copy(width = barWidth))
             }
             Spacer(modifier = Modifier.height(20.dp))
             Button(
@@ -152,7 +148,7 @@ fun GoalDialogStep(
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00a613)),
                         shape = RoundedCornerShape(10.dp)
                     ) {
-                        Text("Set")
+                        Text("Set" , color = Color.White)
                     }
                 }
             }

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -64,7 +63,6 @@ import com.patrykandpatrick.vico.compose.chart.scroll.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.component.rememberLineComponent
 import com.patrykandpatrick.vico.core.axis.AxisItemPlacer
 import com.patrykandpatrick.vico.core.axis.AxisPosition
-import com.patrykandpatrick.vico.core.axis.BaseAxis
 import com.patrykandpatrick.vico.core.axis.formatter.AxisValueFormatter
 import com.patrykandpatrick.vico.core.chart.layout.HorizontalLayout
 import com.patrykandpatrick.vico.core.component.shape.Shapes
@@ -74,7 +72,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.lang.String.format
 import java.util.Calendar
 
 
@@ -113,7 +110,7 @@ fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hilt
     val stepCountToday by viewModel.stepCount.collectAsState()
     val userStepGoal by viewModel.userStepGoal.collectAsState()
 
-    //data example Steps
+    //data Steps
     val stepsPerDay: List<Int> by viewModel.weeklyStepCounts.collectAsState()
     val stepsPerDayFloats = stepsPerDay.map { it.toFloat() }
     val stepsPerMonth by viewModel.monthlyStepCounts.collectAsState()
@@ -143,9 +140,9 @@ fun StepScreen(navController: NavHostController, viewModel: HomeViewModel = hilt
             modifier = Modifier
                 .fillMaxSize()
                 .fillMaxWidth()
-                .background(Color(0xFF262626)) // Set the background color here
+                .background(Color(0xFF262626))
                 .padding(start = 10.dp)
-                .padding(paddingValues) // Apply the padding here
+                .padding(paddingValues)
         ) {
             item {
                 val labels = listOf("Week", "Month")
@@ -259,7 +256,7 @@ fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hil
     val formattedAverageSleepMonth = "${averageSleepMonthHours}h ${averageSleepMonthMinutes}m"
     // Converts each value to hours
     val sleepPerDayHours = sleepPerDayFloats.map { it / 60 }
-    val sleepPerMonthHours = sleepPerMonthMin.map { it.toFloat() / 60 }
+    val sleepPerMonthHours = sleepPerMonthMin.map { it / 60 }
 
 
 
@@ -286,9 +283,9 @@ fun SleepScreen(navController: NavHostController, viewModel: HomeViewModel = hil
             modifier = Modifier
                 .fillMaxSize()
                 .fillMaxWidth()
-                .background(Color(0xFF262626)) // Set the background color here
+                .background(Color(0xFF262626))
                 .padding(start = 10.dp)
-                .padding(paddingValues) // Apply the padding here
+                .padding(paddingValues)
         ) {
             item {
                 val labels = listOf("Week", "Month")
@@ -399,7 +396,6 @@ fun CaloriesScreen(navController: NavHostController, viewModel: HomeViewModel = 
 
     LaunchedEffect(caloriesPerDayMin, caloriesPerMonthMin) {
         if (isInitialLoad.value) {
-            // Only apply the delay for the initial load
             delay(50)
             isInitialLoad.value = false
         }
@@ -411,7 +407,7 @@ fun CaloriesScreen(navController: NavHostController, viewModel: HomeViewModel = 
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFF333333)),
-            contentAlignment = Alignment.Center // This aligns the contents of the Box (including the Column) to the center
+            contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator()
         }
@@ -437,9 +433,9 @@ fun CaloriesScreen(navController: NavHostController, viewModel: HomeViewModel = 
             modifier = Modifier
                 .fillMaxSize()
                 .fillMaxWidth()
-                .background(Color(0xFF262626)) // Set the background color here
+                .background(Color(0xFF262626))
                 .padding(start = 10.dp)
-                .padding(paddingValues) // Apply the padding here
+                .padding(paddingValues)
         ) {
             item {
                 val labels = listOf("Week", "Month")
@@ -577,9 +573,19 @@ fun WaterIntakeScreen(navController: NavHostController, viewModel: HomeViewModel
         }
     } else {
 
-    val averageWaterDay = waterPerDayMin.average()
-    val averageWaterMonth = waterPerMonthMin.average()
-    var averageWaterCount = averageWaterDay.toInt()
+        val averageWaterDay = waterPerDayMin.filter { it > 0 }.let {
+            if (it.isNotEmpty()) it.average() else 0.0
+        }
+        val averageWaterMonth = waterPerMonthMin.filter { it > 0 }.let {
+            if (it.isNotEmpty()) it.average() else 0.0
+        }
+        var averageWaterCount = averageWaterDay.toInt()
+        if (averageWaterCount == 0) {
+            println("No water intake data to process.")
+        } else {
+            println("Average daily water intake: $averageWaterCount mL")
+        }
+
 
 
 
@@ -607,9 +613,9 @@ fun WaterIntakeScreen(navController: NavHostController, viewModel: HomeViewModel
             modifier = Modifier
                 .fillMaxSize()
                 .fillMaxWidth()
-                .background(Color(0xFF262626)) // Set the background color here
+                .background(Color(0xFF262626))
                 .padding(top = 10.dp, start = 10.dp)
-                .padding(paddingValues) // Apply the padding here
+                .padding(paddingValues)
         ) {
             item {
 
@@ -630,7 +636,7 @@ fun WaterIntakeScreen(navController: NavHostController, viewModel: HomeViewModel
                         )
                     }
                     if(selectedLabel.value == "Week") {
-                        averageWaterCount = averageWaterMonth.toInt() // Correct way to assign value
+                        averageWaterCount = averageWaterMonth.toInt()
                         Chart2(
                             modifier = Modifier
                                 .padding(end = 10.dp)
@@ -643,7 +649,7 @@ fun WaterIntakeScreen(navController: NavHostController, viewModel: HomeViewModel
                         )
                     }
                     if(selectedLabel.value == "Month") {
-                        averageWaterCount = averageWaterDay.toInt() // Correct way to assign value
+                        averageWaterCount = averageWaterDay.toInt()
                         Chart2(
                             modifier = Modifier
                                 .padding(end = 10.dp)
@@ -1134,9 +1140,7 @@ fun NutritionCaloriesScreen(navController: NavHostController, viewModel: HomeVie
         ) {
             item {
                 val context = LocalContext.current
-                // State to trigger re-fetching data
                 var fetchDataTrigger by remember { mutableStateOf(false) }
-                // Example fetching function
                 val fetchCaloriesData = remember {
                     {
                         viewModel.fetchTodaysNutrition()
@@ -1337,11 +1341,11 @@ private fun ComposeChart2(
         remember { AxisItemPlacer.Vertical.step() }
     }
     val startAxisH = if(isSleepData) {
-            AxisValueFormatter<AxisPosition.Vertical.Start> { value, _, _ ->
+            AxisValueFormatter { value, _, _ ->
                 "${value.toInt()}h"
             }
     } else if(distanceData){
-        AxisValueFormatter<AxisPosition.Vertical.Start> { value, _, _ ->
+        AxisValueFormatter { value, _, _ ->
             "${value.toInt()}m"
         }
 

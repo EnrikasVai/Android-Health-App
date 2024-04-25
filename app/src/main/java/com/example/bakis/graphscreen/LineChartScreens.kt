@@ -1,7 +1,5 @@
 package com.example.bakis.graphscreen
 
-import android.text.Layout
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -13,9 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
@@ -33,18 +29,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.bakis.composables.CustomBottomNavigationBar
 import com.example.bakis.composables.CustomTopAppBar
-import com.example.bakis.graphscreen.rememberMarker
 import com.example.bakis.viewmodel.HomeViewModel
 import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
 import com.patrykandpatrick.vico.compose.axis.rememberAxisGuidelineComponent
@@ -200,33 +191,12 @@ fun HeartRateScreen(navController: NavHostController, viewModel: HomeViewModel =
                         Box(modifier = Modifier
                             .fillMaxWidth()
                             .padding(start = 10.dp, end = 20.dp)) {
-                            val annotatedText = buildAnnotatedString {
-                                withStyle(style = SpanStyle(color = Color.White)) {
-                                    append("Heart rate is measured in beats per minute (bpm), and can be elevated by things like activity, stress, or excitement. ")
-                                }
-                                // Add a clickable annotation around "Learn More"
-                                pushStringAnnotation(tag = "URL", annotation = "learn_more")
-                                withStyle(style = SpanStyle(color = Color(0xFF4444c9), textDecoration = TextDecoration.Underline)) {
-                                    append("Learn More")
-                                }
-                                pop()
-                            }
-                            ClickableText(
-                                text = annotatedText,
-                                onClick = { offset ->
-                                    annotatedText.getStringAnnotations(tag = "URL", start = offset, end = offset)
-                                        .firstOrNull()?.let { annotation ->
-                                            if (annotation.item == "learn_more") {
-                                                // Handle the click action here, such as opening a web page or displaying more information
-                                                Log.d("ClickableText", "Learn More was clicked")
-                                            }
-                                        }
-                                },
-                                style = androidx.compose.ui.text.TextStyle(textAlign = TextAlign.Justify),
-                                modifier = Modifier.padding(10.dp)
+                            Text("Heart rate is measured in beats per minute (bpm), and can be elevated by things like activity, stress, or excitement.",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Justify
                             )
                         }
-
                     }
                 }
                 Spacer(modifier = Modifier.height(30.dp))
@@ -256,6 +226,7 @@ fun HeartRateRestingScreen(navController: NavHostController, viewModel: HomeView
     val bottomAxisValueFormatterMonth = AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->
         rotatedMonths[(x % rotatedMonths.size).toInt()]
     }
+
 
     //data example
     val bpmRestingWeek by viewModel.weeklyHeartRateCountsResting.collectAsState()
@@ -443,7 +414,7 @@ private fun ComposeChart1(
     val marker = rememberMarker(data = bpmData, markerText = markerText)
     val isBPMData = markerText.contains("BPM", ignoreCase = true)
     val startAxisH =if(isBPMData){
-        AxisValueFormatter<AxisPosition.Vertical.Start> { value, _, _ ->
+        AxisValueFormatter { value, _, _ ->
             "${value.toInt()}bpm"
         }
     }else {
@@ -487,15 +458,3 @@ private fun ComposeChart1(
 //private const val PERSISTENT_MARKER_X = 7f
 
 private val x = (1..50).toList()
-val daysOfWeek2 = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-private val bottomAxisValueFormatter =
-    AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->
-        // Use daysOfWeek to get the label for each x value
-        daysOfWeek2[x.toInt() % daysOfWeek2.size]
-    }
-val months2 = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul","Aug","Sep","Oct", "Nov", "Dec")
-private val bottomAxisValueFormatterMonth =
-    AxisValueFormatter<AxisPosition.Horizontal.Bottom> { x, _, _ ->
-        // Use daysOfWeek to get the label for each x value
-        months2[x.toInt() % months2.size]
-    }

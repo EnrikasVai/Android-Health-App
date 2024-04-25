@@ -70,7 +70,7 @@ fun WelcomeScreen(homeViewModel: HomeViewModel, navController: NavHostController
     }
     // Handle the back button press
     BackHandler(enabled = true) {
-        activity.finish() // This will close the application
+        activity.finish()
     }
 
     Box(
@@ -95,8 +95,8 @@ fun WelcomeScreen(homeViewModel: HomeViewModel, navController: NavHostController
                         painter = painterResource(id = R.drawable.logo_app),
                         contentDescription = "Your content description here",
                         modifier = Modifier
-                            .size(100.dp) // Set the size of the image
-                            .clip(CircleShape) // Clip the image to a circle
+                            .size(100.dp)
+                            .clip(CircleShape)
                     )
                     Text(
                         text = "Welcome to Your Health App",
@@ -104,7 +104,7 @@ fun WelcomeScreen(homeViewModel: HomeViewModel, navController: NavHostController
                         color = Color.White,
                         textAlign = TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(30.dp)) // Adds space between the text and the progress indicator
+                    Spacer(modifier = Modifier.height(30.dp))
                     CircularProgressIndicator(color = Color.White)
                 }
             }

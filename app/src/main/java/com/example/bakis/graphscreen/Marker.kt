@@ -7,8 +7,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.bakis.viewmodel.HomeViewModel
 import com.patrykandpatrick.vico.compose.component.fixed
 import com.patrykandpatrick.vico.compose.component.rememberLayeredComponent
 import com.patrykandpatrick.vico.compose.component.rememberLineComponent
@@ -159,10 +157,6 @@ class CustomMarkerLabelFormatter(
         return labelBuilder.toString()
     }
 }
-
-
-
-
 
 
 private const val LABEL_BACKGROUND_SHADOW_RADIUS_DP = 4f

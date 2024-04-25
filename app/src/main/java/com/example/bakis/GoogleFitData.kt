@@ -1,8 +1,9 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.bakis
 
 import android.content.Context
 import android.util.Log
-import android.widget.Toast
 import com.google.android.gms.fitness.Fitness
 import com.google.android.gms.fitness.data.DataType
 import com.google.android.gms.fitness.request.DataReadRequest
@@ -17,6 +18,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
+@Suppress("DEPRECATION", "NAME_SHADOWING")
 class GoogleFitDataHandler(private val context: Context) {
 
     fun readFitnessData(listener: TodayDataListener) {
@@ -45,7 +47,7 @@ class GoogleFitDataHandler(private val context: Context) {
                 val buckets = response.buckets
                 var totalDistance = 0.0
                 var moveMinutes = 0.0
-                var averageSpeed = 0.0
+                val averageSpeed = 0.0
                 buckets.forEach { bucket ->
                     bucket.dataSets.forEach { dataSet ->
                         when (dataSet.dataType) {
@@ -297,12 +299,12 @@ class GoogleFitDataHandler(private val context: Context) {
         }
         val startTime = startCalendar.timeInMillis
 
-        val initialMonthlyData = (0..11).map {
+        val initialMonthlyData = (0..11).associate {
             val cal = Calendar.getInstance().apply {
                 add(Calendar.MONTH, -it)
             }
             Pair(Pair(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH)), 0)
-        }.toMap().toMutableMap()
+        }.toMutableMap()
 
         val readRequest = DataReadRequest.Builder()
             .aggregate(DataType.TYPE_MOVE_MINUTES, DataType.AGGREGATE_MOVE_MINUTES)
@@ -377,10 +379,10 @@ class GoogleFitDataHandler(private val context: Context) {
             .readData(readRequest)
             .addOnSuccessListener { response ->
                 val distanceData = response.buckets.mapNotNull { bucket ->
-                    bucket.dataSets.flatMap { it.dataPoints }
-                        .mapNotNull { it.getValue(Field.FIELD_DISTANCE).asFloat() } // Extract as Float
-                        .firstOrNull() // Take the first or return null if empty
-                }.filterNotNull() // Ensure no null values are included
+                    bucket.dataSets.flatMap { it.dataPoints }.firstNotNullOfOrNull {
+                        it.getValue(Field.FIELD_DISTANCE).asFloat()
+                    } // Take the first or return null if empty
+                } // Ensure no null values are included
 
                 listener.onDistanceDataReceived(distanceData)
             }
@@ -443,7 +445,7 @@ class GoogleFitDataHandler(private val context: Context) {
                     }
                     val yearMonth = Pair(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH))
                     val distances = monthlyAverageData[yearMonth]
-                    if (distances != null && distances.isNotEmpty()) {
+                    if (!distances.isNullOrEmpty()) {
                         distances.average().toFloat()
                     } else {
                         0f
@@ -491,7 +493,6 @@ class GoogleFitDataHandler(private val context: Context) {
                 val dataSet = response.buckets.flatMap { it.dataSets }.flatMap { it.dataPoints }
                 val totalSteps = dataSet.sumOf { it.getValue(Field.FIELD_STEPS).asInt() }
                 listener.onStepDataReceived(totalSteps)
-                Toast.makeText(context, "G-FIT Total steps: $totalSteps", Toast.LENGTH_LONG).show()
             }
             .addOnFailureListener { e ->
                 Log.e("GoogleFit", "There was a problem reading the data.", e)
@@ -534,7 +535,6 @@ class GoogleFitDataHandler(private val context: Context) {
                     totalSleepMinutes += (endTime - startTime).toInt()
                 }
                 listener.onSleepDataReceived(totalSleepMinutes)
-                Toast.makeText(context, "G-FIT Total sleep: $totalSleepMinutes minutes", Toast.LENGTH_LONG).show()
             }
             .addOnFailureListener { e ->
                 Log.e("GoogleFitSleep", "There was a problem reading the sleep data.", e)
@@ -572,7 +572,6 @@ class GoogleFitDataHandler(private val context: Context) {
                     totalCalories += dataPoint.getValue(Field.FIELD_CALORIES).asFloat()
                 }
                 listener.onCalDataReceived(totalCalories.toInt())
-                Toast.makeText(context, "G-FIT Total sleep: $totalCalories cal", Toast.LENGTH_LONG).show()
             }
             .addOnFailureListener { e ->
                 Log.e("GoogleFitCalories", "There was a problem reading the calories data.", e)
@@ -613,7 +612,6 @@ class GoogleFitDataHandler(private val context: Context) {
                 }
                 val averageHeartRate = if (dataPointsCount > 0) totalHeartRate / dataPointsCount else 0.0
                 listener.onHeartRateDataReceived(averageHeartRate.toFloat())
-                Toast.makeText(context, "G-FIT Average Heart Rate: $averageHeartRate bpm", Toast.LENGTH_LONG).show()
             }
             .addOnFailureListener { e ->
                 Log.e("GoogleFitHeartRate", "There was a problem reading the heart rate data.", e)
@@ -662,7 +660,6 @@ class GoogleFitDataHandler(private val context: Context) {
 
                 // Callback or handle the single resting BPM value
                 listener.onHeartRateDataReceived(restingHeartRateAverage.toFloat())
-                Toast.makeText(context, "G-FIT Resting Heart Rate: $restingHeartRateAverage bpm", Toast.LENGTH_LONG).show()
             }
             .addOnFailureListener { e ->
                 Log.e("GoogleFitRestingHeartRate", "There was a problem reading the resting heart rate data.", e)
@@ -890,7 +887,7 @@ class GoogleFitDataHandler(private val context: Context) {
                 // Aggregate daily steps into monthly averages, considering only days with data
                 val monthlyAverages = dailyStepsMap.entries.groupBy {
                     it.key.substring(0, 7) // Group by year-month
-                }.mapValues { (month, entries) ->
+                }.mapValues { (_, entries) ->
                     val totalSteps = entries.sumOf { it.value }
                     val daysWithData = entries.count { it.value > 0 }
                     if (daysWithData > 0) totalSteps.toFloat() / daysWithData else 0f // Average based on days with data

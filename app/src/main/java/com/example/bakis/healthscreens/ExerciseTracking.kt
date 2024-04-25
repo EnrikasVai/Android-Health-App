@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -23,6 +24,22 @@ import com.example.bakis.viewmodel.HomeViewModel
 
 @Composable
 fun ExerciseTracking(navController: NavController, viewModel: HomeViewModel = hiltViewModel()){
+    LaunchedEffect(Unit) {
+        viewModel.fetchStepCount()
+        viewModel.fetchWeeklyStepCount()
+        viewModel.fetchMonthlyStepCounts()
+
+        viewModel.fetchFitnessData()
+        viewModel.fetchCalCount()
+        viewModel.fetchWeeklyCaloriesCount()
+        viewModel.fetchMonthlyCaloriesCounts()
+
+        viewModel.fetchWeeklyMoveMinutes()
+        viewModel.fetchMonthlyMoveMinutes()
+
+        viewModel.fetchWeeklyDistance()
+        viewModel.fetchMonthlyDistance()
+    }
     val stepCount by viewModel.stepCount.collectAsState()
     val stepCountWeek by viewModel.weeklyStepCounts.collectAsState()
     val stepsPerDayFloats = stepCountWeek.map { it.toFloat() }
@@ -38,7 +55,7 @@ fun ExerciseTracking(navController: NavController, viewModel: HomeViewModel = hi
     val distanceWeek by viewModel.weeklyDistance.collectAsState()
 
     val todayMoveHours = minCount / 60.0
-    val todaySpeedKmH = if (todayMoveHours > 0) ((distanceToday / 1000) / todayMoveHours).toDouble() else 0.0
+    val todaySpeedKmH = if (todayMoveHours > 0) ((distanceToday / 1000) / todayMoveHours) else 0.0
     val todaySpeedKmHRounded = String.format("%.2f", todaySpeedKmH).toDouble()
     val weeklySpeedsKmH = minWeekCountFloats.zip(distanceWeek).map { (dailyMinutes, dailyDistance) ->
         val dailyHours = dailyMinutes / 60.0 // Convert minutes to hours
@@ -69,7 +86,7 @@ fun ExerciseTracking(navController: NavController, viewModel: HomeViewModel = hi
                         caloriesPerDay = stepsPerDayFloats,
                         navController = navController,
                         navigateTo = "stepData",
-                        color = 0xFFA6DECD
+                        color = 0xFFfca46a
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     HealthBox(
@@ -80,7 +97,7 @@ fun ExerciseTracking(navController: NavController, viewModel: HomeViewModel = hi
                         caloriesPerDay = caloriesCountWeek,
                         navController = navController,
                         navigateTo = "caloriesScreen",
-                        color = 0xFFA6DECD
+                        color = 0xFFfca46a
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     HealthBox(
@@ -91,7 +108,7 @@ fun ExerciseTracking(navController: NavController, viewModel: HomeViewModel = hi
                         caloriesPerDay = minWeekCountFloats,
                         navController = navController,
                         navigateTo = "moveMinutes",
-                        color = 0xFFA6DECD
+                        color = 0xFFfca46a
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     HealthBox(
@@ -102,7 +119,7 @@ fun ExerciseTracking(navController: NavController, viewModel: HomeViewModel = hi
                         caloriesPerDay = weeklySpeedsKmHRounded,
                         navController = navController,
                         navigateTo = "speed",
-                        color = 0xFFA6DECD
+                        color = 0xFFfca46a
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     HealthBox(
@@ -113,7 +130,7 @@ fun ExerciseTracking(navController: NavController, viewModel: HomeViewModel = hi
                         caloriesPerDay = distanceWeek,
                         navController = navController,
                         navigateTo = "distance",
-                        color = 0xFFA6DECD
+                        color = 0xFFfca46a
                     )
                 }
             }

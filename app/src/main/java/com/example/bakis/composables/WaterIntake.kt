@@ -48,7 +48,6 @@ import java.util.Locale
 
 @Composable
 fun WaterIntakeTracker(homeViewModel: HomeViewModel=hiltViewModel()) {
-    // Assuming userId is fetched or defined elsewhere in your app
     val userId by homeViewModel.userId.collectAsState()
     val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     val today = dateFormat.format(Date())
@@ -129,7 +128,6 @@ fun WaterIntakeTracker(homeViewModel: HomeViewModel=hiltViewModel()) {
                 GoalDialog(
                     currentGoal = userWaterGoal,
                     onGoalSet = { newGoal ->
-                        // This lambda now needs to call the ViewModel to update the goal
                         homeViewModel.updateUserWaterGoal(userId, newGoal)
                     },
                     onDismissRequest = { showGoalDialog = false }
@@ -151,7 +149,6 @@ fun WaterIntakeTracker(homeViewModel: HomeViewModel=hiltViewModel()) {
             Spacer(Modifier.height(16.dp))
 
             // Display water intake records
-            // Text("Today's Intake", fontSize = 18.sp, color = Color.White)
             waterIntakeRecords.filter { it.date == today }.forEach { intake ->
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 10.dp)) {
                     Text("${intake.intakeAmount} ml of water Today", color = Color.White, modifier = Modifier.weight(1f), fontSize = 18.sp)
@@ -210,7 +207,7 @@ fun CupSizeDialog(
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00a613)),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text("Set")
+                    Text("Set" , color = Color.White)
                 }
             }
         }

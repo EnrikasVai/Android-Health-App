@@ -1,3 +1,5 @@
+@file:Suppress("NAMED_ARGUMENTS_NOT_ALLOWED")
+
 package com.example.bakis
 
 import androidx.compose.animation.core.Animatable

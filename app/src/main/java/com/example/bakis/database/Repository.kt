@@ -1,7 +1,5 @@
 package com.example.bakis.database
 
-import androidx.room.Update
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -79,7 +77,7 @@ class RepositoryImpl @Inject constructor(
         //Update Info profile
 
         override suspend fun updateUserName(id: Int, newName: String) {
-                withContext(Dispatchers.IO) {
+                withContext(IO) {
                         dao.updateUserName(id, newName)
                 }
         }

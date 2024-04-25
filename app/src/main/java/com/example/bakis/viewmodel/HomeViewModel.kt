@@ -93,8 +93,6 @@ class HomeViewModel @Inject constructor(
     val monthlyHeartRateCountsResting: StateFlow<List<Float>> = _monthlyHeartRateCountsResting.asStateFlow()
 
 
-
-
     init {
         fetchStepCount()
         fetchSleepCount()
@@ -230,8 +228,8 @@ class HomeViewModel @Inject constructor(
     fun fetchBpmCount() {
         val googleFitDataHandler = GoogleFitDataHandler(context)
         googleFitDataHandler.readHeartRateData(object : GoogleFitDataHandler.HeartRateDataListener {
-            override fun onHeartRateDataReceived(bpmCount: Float) {
-                _bpmCount.value = bpmCount.toString()
+            override fun onHeartRateDataReceived(averageHeartRate: Float) {
+                _bpmCount.value = averageHeartRate.toString()
             }
 
             override fun onError(e: Exception) {
@@ -242,8 +240,8 @@ class HomeViewModel @Inject constructor(
     fun fetchBpmCountResting() {
         val googleFitDataHandler = GoogleFitDataHandler(context)
         googleFitDataHandler.readRestingHeartRateData(object : GoogleFitDataHandler.HeartRateDataListener {
-            override fun onHeartRateDataReceived(bpmCount: Float) {
-                _bpmCountResting.value = bpmCount.toString()
+            override fun onHeartRateDataReceived(averageHeartRate: Float) {
+                _bpmCountResting.value = averageHeartRate.toString()
             }
             override fun onError(e: Exception) {
                 Log.e("HomeViewModel", "Error fetching step count", e)
@@ -269,8 +267,8 @@ class HomeViewModel @Inject constructor(
     fun fetchSleepCount() {
         val googleFitDataHandler = GoogleFitDataHandler(context)
         googleFitDataHandler.readSleepData(object : GoogleFitDataHandler.SleepDataListener {
-            override fun onSleepDataReceived(sleepCount: Int) {
-                _sleepCount.value = sleepCount.toString()
+            override fun onSleepDataReceived(totalSleepMinutes: Int) {
+                _sleepCount.value = totalSleepMinutes.toString()
             }
 
             override fun onError(e: Exception) {
@@ -314,7 +312,7 @@ class HomeViewModel @Inject constructor(
             }
         })
     }
-    fun fetchWeeklySleepCount() {
+    private fun fetchWeeklySleepCount() {
         val googleFitDataHandler = GoogleFitDataHandler(context)
         googleFitDataHandler.readWeekSleepData(object : GoogleFitDataHandler.SleepDataWeekListener {
             override fun onSleepDataReceived(sleepMinutesPerDay: List<Int>) {
@@ -326,11 +324,11 @@ class HomeViewModel @Inject constructor(
             }
         })
     }
-    fun fetchMonthlySleepCounts() {
+    private fun fetchMonthlySleepCounts() {
         val googleFitDataHandler = GoogleFitDataHandler(context)
         googleFitDataHandler.readAverageSleepForPast12Months(object : GoogleFitDataHandler.SleepDataMonthListener {
-            override fun onSleepDataMonthReceived(sleepCount: Map<String, Float>) { // Ensure this matches interface
-                _monthlySleepCounts.value = sleepCount.values.toList() // This already expects Float, matching the interface
+            override fun onSleepDataMonthReceived(sleepCounts: Map<String, Float>) { // Ensure this matches interface
+                _monthlySleepCounts.value = sleepCounts.values.toList() // This already expects Float, matching the interface
             }
 
             override fun onError(e: Exception) {
@@ -364,8 +362,8 @@ class HomeViewModel @Inject constructor(
     fun fetchMonthlyHeartRateCounts() {
         val googleFitDataHandler = GoogleFitDataHandler(context)
         googleFitDataHandler.readAverageHeartRateForPast12Months(object : GoogleFitDataHandler.HeartRateDataMonthListener {
-            override fun onHeartRateDataReceived(heartRateCounts: Map<String, Float>) { // Ensure this matches interface
-                _monthlyHeartRateCounts.value = heartRateCounts.values.toList() // This already expects Float, matching the interface
+            override fun onHeartRateDataReceived(heartRateAverages: Map<String, Float>) { // Ensure this matches interface
+                _monthlyHeartRateCounts.value = heartRateAverages.values.toList() // This already expects Float, matching the interface
             }
 
             override fun onError(e: Exception) {
@@ -377,8 +375,8 @@ class HomeViewModel @Inject constructor(
     fun fetchMonthlyHeartRateCountsResting() {
         val googleFitDataHandler = GoogleFitDataHandler(context)
         googleFitDataHandler.readMonthlyAverageRestingHeartRate(object : GoogleFitDataHandler.HeartRateDataMonthListener {
-            override fun onHeartRateDataReceived(heartRateCounts: Map<String, Float>) { // Ensure this matches interface
-                _monthlyHeartRateCountsResting.value = heartRateCounts.values.toList() // This already expects Float, matching the interface
+            override fun onHeartRateDataReceived(heartRateAverages: Map<String, Float>) { // Ensure this matches interface
+                _monthlyHeartRateCountsResting.value = heartRateAverages.values.toList() // This already expects Float, matching the interface
             }
 
             override fun onError(e: Exception) {
@@ -390,10 +388,10 @@ class HomeViewModel @Inject constructor(
     fun fetchWeeklyCaloriesCount() {
         val googleFitDataHandler = GoogleFitDataHandler(context)
         googleFitDataHandler.readWeekCaloriesData(object : GoogleFitDataHandler.CaloriesDataWeekListener {
-            override fun onCaloriesDataReceived(caloriesCounts: List<Float>) {
+            override fun onCaloriesDataReceived(calorieCounts: List<Float>) {
                 // Assuming _weeklyHeartRateCounts is a LiveData or similar observable data holder for the UI
                 // This variable should be defined somewhere in your ViewModel or similar structure
-                _weeklyCaloriesCounts.value = caloriesCounts
+                _weeklyCaloriesCounts.value = calorieCounts
             }
 
             override fun onError(e: Exception) {
@@ -405,8 +403,8 @@ class HomeViewModel @Inject constructor(
     fun fetchMonthlyCaloriesCounts() {
         val googleFitDataHandler = GoogleFitDataHandler(context)
         googleFitDataHandler.readAverageCaloriesForPast12Months(object : GoogleFitDataHandler.CaloriesDataMonthListener {
-            override fun onCaloriesDataReceived(caloriesCounts: Map<String, Float>) { // Ensure this matches interface
-                _monthlyCaloriesCounts.value = caloriesCounts.values.toList() // This already expects Float, matching the interface
+            override fun onCaloriesDataReceived(calorieAverages: Map<String, Float>) { // Ensure this matches interface
+                _monthlyCaloriesCounts.value = calorieAverages.values.toList() // This already expects Float, matching the interface
             }
 
             override fun onError(e: Exception) {
@@ -415,7 +413,7 @@ class HomeViewModel @Inject constructor(
             }
         })
     }
-    fun fetchWeeklyHeartRateMinMax() {
+    private fun fetchWeeklyHeartRateMinMax() {
         val googleFitDataHandler = GoogleFitDataHandler(context)
         viewModelScope.launch {
             googleFitDataHandler.readWeekHeartRateData(object :
@@ -431,16 +429,7 @@ class HomeViewModel @Inject constructor(
     }
 
 
-
-
-
-
-
-    private val _studentDetailsList = MutableStateFlow(emptyList<UserEntity>())
-    val userDetailsList = _studentDetailsList.asStateFlow()
-
     private val _dailyWaterIntake = MutableStateFlow<List<WaterIntakeEntity>>(emptyList())
-    val dailyWaterIntake: StateFlow<List<WaterIntakeEntity>> = _dailyWaterIntake.asStateFlow()
 
     private val _totalDailyIntake = MutableStateFlow(0)
     val totalDailyIntake: StateFlow<Int> = _totalDailyIntake.asStateFlow()
@@ -461,70 +450,35 @@ class HomeViewModel @Inject constructor(
     }
 
 
-    fun updateUser(userEntity: UserEntity) {
-        viewModelScope.launch(IO) {
-            repository.update(userEntity)
-        }
-    }
-
     fun insertUser(userEntity: UserEntity) {
         viewModelScope.launch(IO) {
             repository.insert(userEntity)
-        }
-    }
-    fun deleteUser(userEntity: UserEntity){
-        viewModelScope.launch(IO) {
-            repository.delete(userEntity)
         }
     }
 
 
     private val _userName = MutableStateFlow("")
     val userName = _userName.asStateFlow()
-    fun setUserName(name: String) {
-        _userName.tryEmit(name)
-    }
 
     private val _userId = MutableStateFlow(0)
     val userId = _userId.asStateFlow()
-    fun setUserId(id: Int) {
-        _userId.tryEmit(id)
-    }
 
     private val _userAge = MutableStateFlow(18)
     val userAge = _userAge.asStateFlow()
-    fun setUserAge(age: Int) {
-        _userAge.tryEmit(age)
-    }
 
     private val _userWeight = MutableStateFlow(60.0)
     val userWeight = _userWeight.asStateFlow()
-    fun setUserWeight(weight: Double) {
-        _userWeight.tryEmit(weight)
-    }
 
     private val _userHeight = MutableStateFlow(160)
     val userHeight = _userHeight.asStateFlow()
-    fun setUserHeight(height: Int) {
-        _userHeight.tryEmit(height)
-    }
 
     private val _userSex = MutableStateFlow(false)
     val userSex = _userSex.asStateFlow()
-    fun setUserSex(sex: Boolean) {
-        _userSex.tryEmit(sex)
-    }
 
     private val _userWaterGoal = MutableStateFlow(2000)
     val userWaterGoal = _userWaterGoal.asStateFlow()
-    fun setUserWaterGoal(waterGoal: Int) {
-        _userWaterGoal.tryEmit(waterGoal)
-    }
     private val _userStepGoal = MutableStateFlow(5000)
     val userStepGoal = _userStepGoal.asStateFlow()
-    fun setUserStepGoal(stepGoal: Int) {
-        _userStepGoal.tryEmit(stepGoal)
-    }
 
     //Delete current user
     fun deleteUserAll() {
@@ -623,13 +577,7 @@ class HomeViewModel @Inject constructor(
             fetchDailyWaterIntakeForUser(waterIntakeEntity.userId, waterIntakeEntity.date)
         }
     }
-    // Goal management
-    private val _intakeGoal = MutableStateFlow(2000) // Default goal
-    val intakeGoal: StateFlow<Int> = _intakeGoal.asStateFlow()
 
-    fun setIntakeGoal(newGoal: Int) {
-        _intakeGoal.value = newGoal
-    }
     //water graph logic
     fun getDailyWaterIntakeTotalsForUser(userId: Int): Flow<List<Pair<String, Int>>> {
         return repository.getAllWaterIntakesForUser(userId)
