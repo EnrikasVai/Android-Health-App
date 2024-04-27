@@ -1,7 +1,9 @@
 package com.example.bakis.healthscreens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -73,7 +75,12 @@ fun ExerciseTracking(navController: NavController, viewModel: HomeViewModel = hi
             )
         }
     ) { paddingValues ->
-        LazyColumn(modifier = Modifier.padding(paddingValues)) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(Color(0xFF262626))
+        ) {
             item{
                 Column(modifier = Modifier.padding(top = 30.dp, start = 10.dp, end = 10.dp, bottom = 50.dp)) {
                     Text(text = "INSIGHTS", color = Color.White, fontSize = 22.sp, modifier = Modifier.padding(start = 10.dp))

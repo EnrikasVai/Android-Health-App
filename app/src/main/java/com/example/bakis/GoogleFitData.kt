@@ -2,12 +2,15 @@
 
 package com.example.bakis
 
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.util.Log
 import com.google.android.gms.fitness.Fitness
 import com.google.android.gms.fitness.data.DataType
 import com.google.android.gms.fitness.request.DataReadRequest
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.fitness.FitnessOptions
 import com.google.android.gms.fitness.data.DataPoint
 import com.google.android.gms.fitness.data.DataSet
 import com.google.android.gms.fitness.data.DataSource
@@ -1376,7 +1379,6 @@ fun addCaloriesToGoogleFit(context: Context, calories: Float, startTime: Long, e
         .setType(DataSource.TYPE_RAW)
         .build()
 
-    // Since Field.NUTRIENTS expects a Map, we prepare the calories in the correct format.
     val nutrientsMap = mapOf(Field.NUTRIENT_CALORIES to calories)
 
     // Create the data point with specific start and end times
@@ -1402,4 +1404,35 @@ fun addCaloriesToGoogleFit(context: Context, calories: Float, startTime: Long, e
             Log.e("GoogleFitCalories", "Failed to add calories to Google Fit.", e)
         }
 }
+fun disconnectFromGoogleFit(context: Context, fitnessOptions: FitnessOptions){
+    // Disable Google Fit for the user.
+    val configClient = Fitness.getConfigClient(context, GoogleSignIn.getAccountForExtension(context, fitnessOptions))
+    configClient.disableFit()
+        .addOnSuccessListener {
+            Log.i(TAG, "Disabled Google Fit")
+            // Proceed to sign out and revoke access.
+            val signInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .addExtension(fitnessOptions)
+                .build()
+            val googleSignInClient = GoogleSignIn.getClient(context, signInOptions)
+
+            // Sign out the user.
+            googleSignInClient.signOut().addOnCompleteListener {
+                Log.i(TAG, "User signed out from Google account")
+            }
+
+            // Revoke all granted permissions.
+            googleSignInClient.revokeAccess().addOnCompleteListener {
+                if (it.isSuccessful) {
+                    Log.i(TAG, "Access to Google Fit revoked")
+                } else {
+                    Log.e(TAG, "Failed to revoke access", it.exception)
+                }
+            }
+        }
+        .addOnFailureListener { e ->
+            Log.w(TAG, "There was an error disabling Google Fit", e)
+        }
+}
+
 

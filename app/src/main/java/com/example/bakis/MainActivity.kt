@@ -1,6 +1,7 @@
 package com.example.bakis
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,7 +19,12 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.fitness.FitnessOptions
 import com.google.android.gms.fitness.data.DataType
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
 import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -35,6 +41,24 @@ class MainActivity : ComponentActivity() {
             .addDataType(DataType.TYPE_NUTRITION, FitnessOptions.ACCESS_READ)
             .addDataType(DataType.TYPE_NUTRITION, FitnessOptions.ACCESS_WRITE)
             .build()
+    }
+    @Module
+    @InstallIn(SingletonComponent::class)
+    object FitnessOptionsModule {
+        @Provides
+        @Singleton
+        fun provideFitnessOptions(): FitnessOptions =
+            FitnessOptions.builder()
+                .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.TYPE_CALORIES_EXPENDED, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.TYPE_SLEEP_SEGMENT, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.TYPE_HEART_RATE_BPM, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.TYPE_MOVE_MINUTES, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.TYPE_DISTANCE_DELTA, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.TYPE_SPEED, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.TYPE_NUTRITION, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.TYPE_NUTRITION, FitnessOptions.ACCESS_WRITE)
+                .build()
     }
 
     // Handling the result of Google Fit permissions request
@@ -54,10 +78,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        // Check if this onCreate was called after 'EXIT' intent
+        if (intent.getBooleanExtra("EXIT", false)) {
+            finish()
+            return
+        }
         // Check if permissions are already granted
         if (checkGoogleFitPermissionGranted()) {
+            requestGoogleFitPermissions()
             setupContent()
+            Log.e("onCreate", "setupContent")
         } else {
             // Request Google Fit permissions
             requestGoogleFitPermissions()
@@ -81,7 +111,7 @@ class MainActivity : ComponentActivity() {
 
     private fun requestGoogleFitPermissions() {
         val signInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestEmail() // Or any other options you need
+            .requestEmail()
             .addExtension(fitnessOptions) // Important for Google Fit
             .build()
         val googleSignInClient = GoogleSignIn.getClient(this, signInOptions)
@@ -95,4 +125,5 @@ class MainActivity : ComponentActivity() {
             setupContent()
         }
     }
+
 }

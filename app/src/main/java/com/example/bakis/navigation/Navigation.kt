@@ -1,10 +1,14 @@
 package com.example.bakis.navigation
 
 
+import android.content.Intent
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.bakis.MainActivity
 import com.example.bakis.graphscreen.CaloriesScreen
 import com.example.bakis.graphscreen.DistanceScreen
 import com.example.bakis.graphscreen.HeartRateRestingScreen
@@ -87,3 +91,5 @@ fun SetupNavigation(navController: NavHostController, homeViewModel: HomeViewMod
         }
     }
 }
+
+

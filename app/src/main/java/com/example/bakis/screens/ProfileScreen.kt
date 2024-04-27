@@ -50,6 +50,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -60,9 +61,7 @@ import com.example.bakis.R
 import com.example.bakis.composables.CustomBottomNavigationBar
 import com.example.bakis.composables.CustomTopAppBar
 import com.example.bakis.viewmodel.HomeViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlin.math.round
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -147,10 +146,7 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
                             onClick = {
                                 showDialog = false
                                 viewModel.viewModelScope.launch {
-                                    viewModel.deleteUserAll()
-                                    withContext(Dispatchers.Main) {
-                                        navController.navigate("welcome")
-                                    }
+                                    viewModel.disconnect()
                                 }
                             },
                             shape = RoundedCornerShape(10.dp),
@@ -250,8 +246,9 @@ fun ProfileScreen(navController: NavHostController, viewModel: HomeViewModel = h
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                     ) {
                         Text(
-                            text = "Delete Profile",
-                            color = Color.White
+                            text = "Delete Profile &\n Disconnect from Google Fit",
+                            color = Color.White,
+                            textAlign = TextAlign.Center
                         )
                     }
                 }

@@ -93,9 +93,14 @@ fun NutritionalTracking(navController: NavController, viewModel: HomeViewModel =
             )
         }
     ) { paddingValues ->
-        LazyColumn(modifier = Modifier.padding(paddingValues)) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(Color(0xFF262626))
+        ) {
             item{
-                Column(modifier = Modifier.padding(top = 30.dp, start = 10.dp)) {
+                Column(modifier = Modifier.padding(top = 30.dp, start = 10.dp, end = 10.dp)) {
                     Text(text = "Data", color = Color.White, fontSize = 22.sp, modifier = Modifier.padding(start = 10.dp))
                     Spacer(modifier = Modifier.height(20.dp))
                     HealthBox(

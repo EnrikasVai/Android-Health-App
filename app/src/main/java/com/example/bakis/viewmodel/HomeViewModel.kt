@@ -2,13 +2,17 @@ package com.example.bakis.viewmodel
 
 
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bakis.GoogleFitDataHandler
+import com.example.bakis.MainActivity
 import com.example.bakis.database.Repository
 import com.example.bakis.database.UserEntity
 import com.example.bakis.database.WaterIntakeEntity
+import com.example.bakis.disconnectFromGoogleFit
+import com.google.android.gms.fitness.FitnessOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers.IO
@@ -28,6 +32,7 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val repository: Repository,
     @ApplicationContext private val context: Context,
+    private val fitnessOptions: FitnessOptions
 ) : ViewModel() {
 
     private val _stepCount = MutableStateFlow("0")
@@ -118,6 +123,21 @@ class HomeViewModel @Inject constructor(
         fetchBpmCountResting()
         fetchWeeklyHeartRateCountResting()
         fetchMonthlyHeartRateCountsResting()
+    }
+
+    fun disconnect() {
+        disconnectFromGoogleFit(context, fitnessOptions)
+        deleteUserAll()
+        // Shutdown the app
+        closeApp(context)
+    }
+
+    private fun closeApp(context: Context) {
+        // Intent to re-launch the main activity clear on top
+        val intent = Intent(context, MainActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        intent.putExtra("EXIT", true)
+        context.startActivity(intent)
     }
     fun fetchWeeklyDistance() {
         val googleFitDataHandler = GoogleFitDataHandler(context)
@@ -481,7 +501,7 @@ class HomeViewModel @Inject constructor(
     val userStepGoal = _userStepGoal.asStateFlow()
 
     //Delete current user
-    fun deleteUserAll() {
+    private fun deleteUserAll() {
         viewModelScope.launch(IO) {
             repository.deleteAllUsers()
         }
