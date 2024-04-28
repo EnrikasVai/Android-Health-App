@@ -1194,7 +1194,7 @@ fun NutritionCaloriesScreen(navController: NavHostController, viewModel: HomeVie
                             stepData = weeksNutritionFloats,
                             axisFormatter = bottomAxisValueFormatter,
                             scrollState = false,
-                            color = 0xFFA6DECD,
+                            color = 0xFF62d82b,
                             markerText = "Calories consumed:"
                         )
                     }
@@ -1206,7 +1206,7 @@ fun NutritionCaloriesScreen(navController: NavHostController, viewModel: HomeVie
                             stepData = monthsNutritionFloats,
                             axisFormatter = bottomAxisValueFormatterMonth,
                             scrollState = true,
-                            color = 0xFFA6DECD,
+                            color = 0xFF62d82b,
                             markerText = markerText
                         )
                     }
@@ -1224,7 +1224,7 @@ fun NutritionCaloriesScreen(navController: NavHostController, viewModel: HomeVie
                                 modifier = Modifier
                                     .weight(1f)
                                     .background(
-                                        if (label == selectedLabel.value) Color(0xFFA6DECD) else Color.DarkGray,
+                                        if (label == selectedLabel.value) Color(0xFF62d82b) else Color.DarkGray,
                                         shape = shape
                                     )
                                     .clickable { selectedLabel.value = label }

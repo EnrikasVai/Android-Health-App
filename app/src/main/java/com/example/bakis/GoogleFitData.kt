@@ -185,6 +185,17 @@ class GoogleFitDataHandler(private val context: Context) {
         }
         val startTime = startCalendar.timeInMillis
 
+        // Pre-populate the map for the last 12 months with zeros
+        val monthlyCaloriesData = mutableMapOf<Pair<Int, Int>, Pair<Double, Int>>()
+        for (i in 0 until 12) {
+            val cal = Calendar.getInstance().apply {
+                add(Calendar.MONTH, -i)
+                set(Calendar.DAY_OF_MONTH, 1) // Ensure consistency
+            }
+            val yearMonth = Pair(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH))
+            monthlyCaloriesData[yearMonth] = Pair(0.0, 0) // Initialize to zero calories and zero days
+        }
+
         val readRequest = DataReadRequest.Builder()
             .aggregate(DataType.TYPE_NUTRITION, DataType.AGGREGATE_NUTRITION_SUMMARY)
             .bucketByTime(1, TimeUnit.DAYS)
@@ -204,32 +215,27 @@ class GoogleFitDataHandler(private val context: Context) {
                     }
                 }
 
-                // Aggregate daily data into monthly total data
-                val monthlyTotalData = mutableMapOf<Pair<Int, Int>, Double>()
-
+                // Update the map with actual data
                 dailyCaloriesData.forEach { (date, calories) ->
                     val cal = Calendar.getInstance().apply { timeInMillis = date }
                     val yearMonth = Pair(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH))
-                    // Explicitly convert calories to Double and use a lambda for addition
-                    monthlyTotalData.merge(yearMonth, calories.toDouble()) { a, b -> a + b }
+                    val existing = monthlyCaloriesData[yearMonth]!!
+                    monthlyCaloriesData[yearMonth] = Pair(existing.first + calories.toDouble(), existing.second + 1)
                 }
 
+                val completeMonthlyAverageData = monthlyCaloriesData.map { (yearMonth, caloriesAndCount) ->
+                    Pair(yearMonth, if (caloriesAndCount.second > 0) caloriesAndCount.first / caloriesAndCount.second else 0.0)
+                }.sortedWith(compareBy({ it.first.first }, { it.first.second }))
 
-                val completeMonthlyData = (0 until 12).map { offset ->
-                    val cal = Calendar.getInstance().apply {
-                        add(Calendar.MONTH, -offset)
-                    }
-                    val yearMonth = Pair(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH))
-                    monthlyTotalData[yearMonth] ?: 0.0
-                }.reversed() // This ensures the current month's data is last
-
-                listener.onCaloriesDataReceived(completeMonthlyData)
+                listener.onCaloriesDataReceived(completeMonthlyAverageData.map { it.second }) // Map to just the averages
             }
             .addOnFailureListener { e ->
                 Log.e("GoogleFitMonthsCalories", "There was a problem reading the nutrition data.", e)
                 listener.onError(e)
             }
     }
+
+
 
 
 
